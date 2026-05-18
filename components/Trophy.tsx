@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { competitionLogoUrl } from "@/lib/logos";
 import { NATIONAL_TOURNAMENT_LOGO } from "@/lib/competitions";
 
@@ -38,14 +37,14 @@ export function TrophyTile({ trophy }: { trophy: TrophyKind }) {
 function renderIcon(t: TrophyKind) {
   if (t.kind === "continental" || t.kind === "bonus") {
     const src = competitionLogoUrl(t.compId);
-    if (src) return <Image src={src} alt={t.name} width={36} height={36} unoptimized />;
+    if (src) return <img src={src} alt={t.name} width={36} height={36} className="object-contain" />;
     return <CupIcon className="size-7 text-gold" />;
   }
   if (t.kind === "national") {
     const slug = NATIONAL_TOURNAMENT_LOGO[t.name];
     if (slug)
       return (
-        <Image src={`/tournaments/${slug}.svg`} alt={t.name} width={36} height={36} unoptimized />
+        <img src={`/tournaments/${slug}.svg`} alt={t.name} width={36} height={36} className="object-contain" />
       );
     return <FlagIcon className="size-7 text-gold" />;
   }

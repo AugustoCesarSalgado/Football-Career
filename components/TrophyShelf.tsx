@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { TrophyKind, CupIcon, BallonIcon, FlagIcon, BootIcon } from "./Trophy";
 import { competitionLogoUrl } from "@/lib/logos";
 import { NATIONAL_TOURNAMENT_LOGO } from "@/lib/competitions";
@@ -135,13 +134,13 @@ function TrophyShelfCard({ g, index }: { g: GroupedTrophy; index: number }) {
 function renderShelfIcon(g: GroupedTrophy) {
   if ((g.kind === "continental" || g.kind === "bonus") && g.compId) {
     const url = competitionLogoUrl(g.compId);
-    if (url) return <Image src={url} alt={g.name} width={56} height={56} unoptimized />;
+    if (url) return <img src={url} alt={g.name} width={56} height={56} className="object-contain" />;
     return <CupIcon className="size-9 text-gold" />;
   }
   if (g.kind === "national") {
     const slug = NATIONAL_TOURNAMENT_LOGO[g.name];
     if (slug)
-      return <Image src={`/tournaments/${slug}.svg`} alt={g.name} width={56} height={56} unoptimized />;
+      return <img src={`/tournaments/${slug}.svg`} alt={g.name} width={56} height={56} className="object-contain" />;
     return <FlagIcon className="size-9 text-gold" />;
   }
   if (g.kind === "award") {
