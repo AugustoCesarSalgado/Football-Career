@@ -2,15 +2,32 @@
   "name": "career-sim",
   "version": "0.1.0",
   "private": true,
+  "description": "A single-player football career simulator — play 22 seasons from 18 to 40, choose your federation, position, club and contract every transfer window.",
+  "keywords": [
+    "nextjs",
+    "football",
+    "soccer",
+    "career",
+    "simulator",
+    "tailwind",
+    "typescript",
+    "zustand"
+  ],
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "next": "16.2.6",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "zustand": "^5.0.13"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
