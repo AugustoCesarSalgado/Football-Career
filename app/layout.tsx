@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
-import { Anton, Manrope, JetBrains_Mono } from "next/font/google";
+import { Syne, DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const anton = Anton({
+const syne = Syne({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: "400",
+  weight: ["400", "600", "700", "800"],
 });
 
-const manrope = Manrope({
+const dmSans = DM_Sans({
   variable: "--font-sans",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
 });
 
 const jetbrains = JetBrains_Mono({
@@ -32,7 +33,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${anton.variable} ${manrope.variable} ${jetbrains.variable} h-full antialiased`}
+      className={`${syne.variable} ${dmSans.variable} ${jetbrains.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-ink text-bone">
         {children}

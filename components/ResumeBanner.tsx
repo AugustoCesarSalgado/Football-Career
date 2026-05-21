@@ -21,57 +21,53 @@ export function ResumeBanner({
   const status = finished ? "Retired" : "In progress";
 
   return (
-    <div className="border-b border-pitch/30 bg-gradient-to-b from-pitch-deep/20 to-transparent">
-      <div className="max-w-[1500px] mx-auto px-8 py-5 flex flex-wrap items-center gap-6 anim-rise">
-        <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.35em] text-pitch font-mono">
-          <span className="inline-block size-1.5 bg-pitch rounded-full anim-pulse-ring" />
-          {status} · saved locally
+    <div className="border-b border-pitch/20 bg-pitch-deep/15 backdrop-blur-sm">
+      <div className="max-w-[1400px] mx-auto px-6 py-4 flex flex-wrap items-center gap-5 anim-rise">
+        <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-pitch font-mono">
+          <span className="size-1.5 bg-pitch rounded-full anim-pulse-ring" />
+          {status}
         </div>
 
-        <div className="h-10 w-px bg-pitch/30 hidden sm:block" />
+        <div className="w-px h-8 bg-line hidden sm:block" />
 
         <div className="flex items-center gap-3 min-w-0">
           <ClubLogo
             name={player.currentClubName}
             url={clubLogoUrl(player.currentClubId)}
-            size={44}
+            size={36}
             className="shrink-0"
           />
           <div className="min-w-0">
-            <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-bone-3 font-mono">
-              <Flag code={player.countryCode} width={16} height={12} />
-              <span>
-                {POSITION_LABEL[player.position]} · #{player.number}
-              </span>
+            <div className="flex items-center gap-1.5 text-[10px] text-bone-3 font-mono">
+              <Flag code={player.countryCode} width={14} height={10} className="rounded-sm" />
+              <span>{POSITION_LABEL[player.position]} · #{player.number}</span>
             </div>
-            <div className="font-display text-2xl text-bone leading-tight tracking-wide truncate">
-              {player.firstName}{" "}
-              <span className="text-bone-2">{player.lastName}</span>
+            <div className="font-display font-bold text-lg text-bone leading-tight tracking-tight truncate">
+              {player.firstName} <span className="text-bone-2">{player.lastName}</span>
             </div>
           </div>
         </div>
 
-        <div className="hidden md:flex items-center gap-3 ml-auto">
-          <Stat label="Age" value={`${currentAge}`} />
-          <Stat label="Seasons" value={`${seasons.length}`} />
-          <Stat label="Goals" value={`${totalGoals}`} accent="pitch" />
-          <Stat label="Assists" value={`${totalAssists}`} />
-          <Stat label="Years left" value={`${yearsLeft}`} accent="gold" />
+        <div className="hidden md:flex items-center gap-2 ml-auto flex-wrap">
+          <Chip label="Age" value={`${currentAge}`} />
+          <Chip label="Seasons" value={`${seasons.length}`} />
+          <Chip label="Goals" value={`${totalGoals}`} accent="pitch" />
+          <Chip label="Assists" value={`${totalAssists}`} />
+          <Chip label="Yrs left" value={`${yearsLeft}`} accent="gold" />
         </div>
 
         <div className="flex items-center gap-2 ml-auto md:ml-0">
           <button
             type="button"
             onClick={onResume}
-            className="bg-pitch text-ink px-5 py-3 font-display text-xl tracking-wider uppercase hover:bg-pitch-2 transition-colors"
+            className="bg-pitch text-ink px-4 py-2 rounded-lg font-display font-bold text-sm tracking-tight hover:bg-pitch-2 transition-colors"
           >
-            {finished ? "Open career →" : "Resume career →"}
+            {finished ? "Open →" : "Resume →"}
           </button>
           <button
             type="button"
             onClick={onDiscard}
-            className="px-3 py-3 border border-line hover:border-blood hover:text-blood text-bone-3 text-[10px] uppercase tracking-[0.25em] font-mono transition-colors"
-            title="Wipe career and start over"
+            className="px-3 py-2 rounded-lg border border-line hover:border-blood/60 hover:text-blood text-bone-3 text-[10px] uppercase tracking-widest font-mono transition-colors"
           >
             Discard
           </button>
@@ -81,7 +77,7 @@ export function ResumeBanner({
   );
 }
 
-function Stat({
+function Chip({
   label,
   value,
   accent,
@@ -92,9 +88,9 @@ function Stat({
 }) {
   const c = accent === "pitch" ? "text-pitch" : accent === "gold" ? "text-gold" : "text-bone";
   return (
-    <div className="border border-line bg-ink-2 px-3 py-1.5">
-      <div className="text-[8px] uppercase tracking-[0.3em] text-bone-3 font-mono">{label}</div>
-      <div className={`num text-base leading-tight ${c}`}>{value}</div>
+    <div className="rounded-lg border border-line bg-ink-2 px-2.5 py-1.5">
+      <div className="text-[8px] uppercase tracking-widest text-bone-3 font-mono">{label}</div>
+      <div className={`num text-sm font-bold leading-tight ${c}`}>{value}</div>
     </div>
   );
 }

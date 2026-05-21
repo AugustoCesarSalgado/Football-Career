@@ -15,11 +15,6 @@ export function OfferCard({
   current?: { salaryEur: number };
 }) {
   const isRenew = offer.type === "renew";
-  const accent = isRenew ? "pitch" : "gold";
-  const accentRing =
-    accent === "pitch"
-      ? "hover:ring-pitch hover:border-pitch"
-      : "hover:ring-gold hover:border-gold";
   const tierLabel = ["Elite", "Top", "Mid", "Small"][offer.clubTier - 1] ?? "Club";
   const salaryDelta =
     current && current.salaryEur > 0
@@ -30,73 +25,84 @@ export function OfferCard({
     <button
       type="button"
       onClick={onAccept}
-      className={`group relative w-full overflow-hidden text-left border bg-ink-2 hover:bg-ink-3 transition-all ring-0 hover:ring-1 ${
-        isRenew ? "border-pitch/50" : "border-gold/50"
-      } ${accentRing}`}
+      className={`group relative w-full text-left rounded-2xl border overflow-hidden transition-all duration-200 hover:scale-[1.01] hover:shadow-2xl ${
+        isRenew
+          ? "bg-pitch-deep/20 border-pitch/30 hover:border-pitch/60 hover:shadow-pitch/10"
+          : "bg-gold-deep/20 border-gold/30 hover:border-gold/60 hover:shadow-gold/10"
+      }`}
     >
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-current to-transparent opacity-60"
-        style={{ color: isRenew ? "var(--color-pitch)" : "var(--color-gold)" }}
+      {/* Top accent line */}
+      <div
+        className="absolute top-0 left-0 right-0 h-0.5"
+        style={{
+          background: isRenew
+            ? "linear-gradient(90deg, transparent, var(--color-pitch), transparent)"
+            : "linear-gradient(90deg, transparent, var(--color-gold), transparent)",
+        }}
       />
+
       <div className="p-6">
-        <div className="flex items-center justify-between">
+        {/* Header row */}
+        <div className="flex items-center justify-between mb-5">
           <span
-            className={`text-[10px] uppercase tracking-[0.3em] font-mono ${
-              isRenew ? "text-pitch" : "text-gold"
+            className={`text-[11px] uppercase tracking-widest font-mono font-bold px-3 py-1 rounded-full border ${
+              isRenew
+                ? "text-pitch border-pitch/40 bg-pitch/10"
+                : "text-gold border-gold/40 bg-gold/10"
             }`}
           >
-            {isRenew ? "Option A · Renew" : "Option B · Transfer"}
+            {isRenew ? "Renew" : "Transfer"}
           </span>
-          <span className="text-[10px] uppercase tracking-widest font-mono text-bone-3 px-2 py-0.5 border border-line">
+          <span className="text-[10px] uppercase tracking-widest font-mono text-bone-3 px-2.5 py-1 rounded-full border border-line bg-ink-3">
             {tierLabel}
           </span>
         </div>
 
-        <div className="mt-5 flex items-center gap-4">
+        {/* Club identity */}
+        <div className="flex items-center gap-4 mb-6">
           <ClubLogo
             name={offer.clubName}
             url={clubLogoUrl(offer.clubId)}
-            size={72}
+            size={64}
             className="shrink-0"
           />
           <div className="min-w-0">
-            <h3 className="font-display text-3xl leading-tight tracking-wide text-bone">
+            <h3 className="font-display font-bold text-2xl leading-tight tracking-tight text-bone">
               {offer.clubName}
             </h3>
-            <div className="flex items-center gap-2 mt-1 text-bone-3 text-[10px] uppercase tracking-[0.25em] font-mono">
-              <Flag code={offer.clubCountry} width={18} height={12} />
+            <div className="flex items-center gap-2 mt-1 text-bone-3 text-[11px] font-mono">
+              <Flag code={offer.clubCountry} width={16} height={11} className="rounded-sm" />
               <span>{offer.clubLeague}</span>
             </div>
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-3 gap-2">
-          <Field
+        {/* Stats row */}
+        <div className="grid grid-cols-3 gap-2 mb-5">
+          <OfferField
             label="Salary / yr"
             value={fmtMoney(offer.salaryEur)}
-            accent={accent === "pitch" ? "pitch" : "gold"}
-            sub={
-              salaryDelta !== 0
-                ? `${salaryDelta > 0 ? "+" : ""}${salaryDelta}%`
-                : undefined
-            }
+            sub={salaryDelta !== 0 ? `${salaryDelta > 0 ? "+" : ""}${salaryDelta}%` : undefined}
+            accent={isRenew ? "pitch" : "gold"}
           />
-          <Field
+          <OfferField
             label={isRenew ? "Stay" : "Contract"}
             value={`${offer.contractYears}y`}
           />
           {!isRenew && offer.transferFeeEur ? (
-            <Field label="Transfer fee" value={fmtMoney(offer.transferFeeEur)} />
+            <OfferField label="Fee" value={fmtMoney(offer.transferFeeEur)} />
           ) : (
-            <Field label="Loyalty" value="—" />
+            <OfferField label="Loyalty" value="—" />
           )}
         </div>
 
+        {/* CTA */}
         <div
-          className={`mt-6 inline-flex items-center gap-2 px-4 py-2 text-[11px] uppercase tracking-[0.25em] font-mono ${
+          className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-display font-bold text-base tracking-tight transition-colors ${
             isRenew
-              ? "text-pitch border border-pitch/60 group-hover:bg-pitch group-hover:text-ink"
-              : "text-gold border border-gold/60 group-hover:bg-gold group-hover:text-ink"
-          } transition-colors`}
+              ? "bg-pitch/15 text-pitch group-hover:bg-pitch group-hover:text-ink"
+              : "bg-gold/15 text-gold group-hover:bg-gold group-hover:text-ink"
+          }`}
         >
           {isRenew ? "Re-sign →" : "Accept transfer →"}
         </div>
@@ -105,7 +111,7 @@ export function OfferCard({
   );
 }
 
-function Field({
+function OfferField({
   label,
   value,
   sub,
@@ -117,17 +123,11 @@ function Field({
   accent?: "pitch" | "gold";
 }) {
   return (
-    <div className="border border-line bg-ink-3 px-3 py-2">
-      <div className="text-[9px] uppercase tracking-[0.3em] text-bone-3 font-mono">
-        {label}
-      </div>
+    <div className="rounded-xl border border-line bg-ink-3 px-3 py-2.5">
+      <div className="text-[9px] uppercase tracking-widest text-bone-3 font-mono">{label}</div>
       <div
-        className={`num text-lg leading-tight ${
-          accent === "pitch"
-            ? "text-pitch"
-            : accent === "gold"
-            ? "text-gold"
-            : "text-bone"
+        className={`num text-base font-bold leading-tight mt-1 ${
+          accent === "pitch" ? "text-pitch" : accent === "gold" ? "text-gold" : "text-bone"
         }`}
       >
         {value}

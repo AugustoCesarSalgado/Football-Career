@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCareer, CAREER_CONFIG } from "@/lib/store";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Marquee } from "@/components/Marquee";
-import { PlayerCard } from "@/components/PlayerCard";
 import { SeasonRow } from "@/components/SeasonRow";
+import { ClubLogo, Flag } from "@/components/Logo";
+import { clubLogoUrl } from "@/lib/logos";
 import { fmtMoney } from "@/lib/format";
+import { COUNTRY_BY_CODE } from "@/lib/countries";
+import { POSITION_SHORT } from "@/lib/squadNumbers";
 
 export default function CareerDashboard() {
   const router = useRouter();
@@ -31,7 +33,7 @@ export default function CareerDashboard() {
   if (!hydrated || !career) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <span className="font-mono text-bone-3 uppercase tracking-[0.3em] text-xs">
+        <span className="font-mono text-bone-3 uppercase tracking-widest text-xs">
           loading career…
         </span>
       </div>
@@ -46,10 +48,10 @@ export default function CareerDashboard() {
     career.seasons.filter((s) => s.club.leagueWin).length +
     career.seasons.filter((s) => s.club.nationalCupWon).length +
     career.seasons.filter((s) => s.club.continentalResult === "champion").length +
-    career.seasons.filter((s) => s.national.tournament?.result === "champion")
-      .length;
+    career.seasons.filter((s) => s.national.tournament?.result === "champion").length;
   const seasonsPlayed = career.seasons.length;
   const yearsLeft = CAREER_CONFIG.RETIREMENT_AGE - career.currentAge + 1;
+  const country = COUNTRY_BY_CODE[career.player.countryCode];
 
   const overall = Math.min(
     99,
@@ -73,8 +75,7 @@ export default function CareerDashboard() {
             <span>{CAREER_CONFIG.RETIREMENT_AGE}</span>
             <button
               onClick={() => router.push("/")}
-              className="ml-3 px-2 py-1 border border-line hover:border-pitch hover:text-pitch transition-colors"
-              title="Saved locally — you can resume later"
+              className="ml-2 px-3 py-1.5 rounded-lg border border-line hover:border-pitch/50 hover:text-pitch transition-colors text-bone-2"
             >
               Exit
             </button>
@@ -89,106 +90,146 @@ export default function CareerDashboard() {
                   router.push("/");
                 }
               }}
-              className="px-2 py-1 border border-line hover:border-blood hover:text-blood transition-colors"
-              title="Wipe career permanently"
+              className="px-3 py-1.5 rounded-lg border border-line hover:border-blood/60 hover:text-blood transition-colors text-bone-3"
             >
               Discard
             </button>
           </>
         }
       />
-      <Marquee
-        items={[
-          `${career.player.firstName} ${career.player.lastName}`,
-          career.player.currentClubName,
-          `Season ${seasonsPlayed + 1}/22`,
-          `${totalGoals}G · ${totalAssists}A`,
-          totalAwards > 0 ? `${totalAwards} individual awards` : "Hungry for silverware",
-        ]}
-      />
 
       <main className="flex-1 bg-pitch-grid">
-        <div className="max-w-[1500px] mx-auto px-8 py-10 grid grid-cols-12 gap-8">
-          {/* Left: player card + simulate */}
-          <section className="col-span-12 lg:col-span-5 space-y-6">
-            <PlayerCard player={career.player} age={career.currentAge} overall={overall} />
+        <div className="max-w-[1400px] mx-auto px-6 py-8 space-y-6">
 
+          {/* ── Player identity banner (full width, horizontal) ── */}
+          <div
+            className="relative rounded-2xl border border-line/60 overflow-hidden p-6 card-diagonal anim-rise"
+            style={{
+              background:
+                "linear-gradient(135deg, var(--color-ink-3), var(--color-ink-2) 55%, var(--color-ink-4))",
+            }}
+          >
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-pitch/50 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
+
+            <div className="flex flex-wrap items-center gap-6">
+              {/* OVR */}
+              <div className="flex items-center justify-center size-16 rounded-full border-2 border-pitch/40 bg-pitch-deep/30 shrink-0">
+                <span className="font-display font-bold text-3xl text-pitch leading-none glow-teal">
+                  {overall}
+                </span>
+              </div>
+
+              {/* Name + meta */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  {country && <Flag code={country.code} width={18} height={13} className="rounded-sm shrink-0" />}
+                  <span className="text-[11px] text-bone-3 font-mono uppercase tracking-widest">
+                    {country?.name ?? career.player.countryCode} · {POSITION_SHORT[career.player.position]} · #{career.player.number}
+                  </span>
+                </div>
+                <h1 className="font-display font-bold text-3xl sm:text-4xl text-bone tracking-tight leading-tight">
+                  {career.player.firstName}{" "}
+                  <span className="text-bone-2">{career.player.lastName}</span>
+                </h1>
+              </div>
+
+              {/* Club */}
+              <div className="flex items-center gap-3">
+                <ClubLogo
+                  name={career.player.currentClubName}
+                  url={clubLogoUrl(career.player.currentClubId)}
+                  size={48}
+                />
+                <div>
+                  <div className="text-sm font-semibold text-bone">{career.player.currentClubName}</div>
+                  <div className="text-[11px] text-bone-3 font-mono">{career.player.currentLeague}</div>
+                </div>
+              </div>
+
+              {/* Contract + salary chips */}
+              <div className="flex flex-wrap gap-2 ml-auto">
+                <InfoChip label="Salary / yr" value={fmtMoney(career.player.salaryEur)} accent="gold" />
+                <InfoChip label="Contract" value={`${career.player.contractYearsLeft}y`} />
+                <InfoChip label="Potential" value={String(career.player.potential)} accent="pitch" />
+              </div>
+            </div>
+          </div>
+
+          {/* ── Simulate CTA + season KPIs row ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 anim-rise delay-100">
+            {/* Simulate button takes 2/3 width */}
             <button
               onClick={simulateNext}
-              className="group relative w-full overflow-hidden bg-pitch text-ink py-8 font-display text-4xl tracking-wider uppercase hover:bg-pitch-2 transition-colors anim-rise"
+              className="lg:col-span-2 group relative overflow-hidden bg-pitch text-ink py-6 rounded-2xl font-display font-bold text-3xl tracking-tight hover:bg-pitch-2 transition-all duration-200 hover:scale-[1.01]"
             >
-              <span className="relative z-10">Simulate next season →</span>
-              <span className="absolute -top-2 left-6 text-ink/60 text-[10px] uppercase tracking-[0.3em] font-mono">
-                Season {seasonsPlayed + 1}
+              <span className="relative z-10">Simulate season {seasonsPlayed + 1} →</span>
+              <span className="absolute top-2 left-5 text-ink/50 text-[10px] font-mono uppercase tracking-widest">
+                Season {seasonsPlayed + 1} / 22
               </span>
             </button>
 
-            <div className="grid grid-cols-4 gap-2">
-              <KPI label="Seasons" value={String(seasonsPlayed)} />
-              <KPI label="Years left" value={String(yearsLeft)} />
-              <KPI label="Salary" value={fmtMoney(career.player.salaryEur)} accent="gold" />
-              <KPI label="Awards" value={String(totalAwards)} accent="gold" />
+            {/* KPIs in 1/3 */}
+            <div className="grid grid-cols-2 gap-3">
+              <KpiTile label="Years left" value={String(yearsLeft)} />
+              <KpiTile label="Awards" value={String(totalAwards)} accent="gold" />
+              <KpiTile label="Salary" value={fmtMoney(career.player.salaryEur)} accent="pitch" />
+              <KpiTile label="Trophies" value={String(trophies)} accent="gold" />
             </div>
-          </section>
+          </div>
 
-          {/* Right: career stats + timeline */}
-          <section className="col-span-12 lg:col-span-7 space-y-6">
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="font-display text-3xl tracking-wide uppercase text-bone">
-                  Career numbers
-                </h2>
-                <span className="text-[10px] uppercase tracking-[0.3em] text-bone-3 font-mono">
-                  Cumulative
-                </span>
-              </div>
-              <div className="grid grid-cols-4 gap-3">
-                <BigKPI label="Goals" value={totalGoals} color="text-pitch" />
-                <BigKPI label="Assists" value={totalAssists} />
-                <BigKPI label="Appearances" value={totalApps} />
-                <BigKPI label="Trophies" value={trophies} color="text-gold" />
-              </div>
+          {/* ── Career totals (full width) ── */}
+          <div className="anim-rise delay-200">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display font-bold text-2xl tracking-tight text-bone">Career numbers</h2>
+              <span className="text-[11px] text-bone-3 font-mono uppercase tracking-widest">Cumulative</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <BigKpi label="Goals" value={totalGoals} color="text-pitch" glow="glow-teal" />
+              <BigKpi label="Assists" value={totalAssists} />
+              <BigKpi label="Appearances" value={totalApps} />
+              <BigKpi label="Trophies" value={trophies} color="text-gold" glow="glow-amber" />
+            </div>
+          </div>
+
+          {/* ── Timeline (full width) ── */}
+          <div className="anim-rise delay-300">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display font-bold text-2xl tracking-tight text-bone">Timeline</h2>
+              <span className="text-[11px] text-bone-3 font-mono uppercase tracking-widest">
+                {seasonsPlayed} season{seasonsPlayed === 1 ? "" : "s"}
+              </span>
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="font-display text-3xl tracking-wide uppercase text-bone">
-                  Timeline
-                </h2>
-                <span className="text-[10px] uppercase tracking-[0.3em] text-bone-3 font-mono">
-                  {seasonsPlayed} season{seasonsPlayed === 1 ? "" : "s"}
-                </span>
+            {seasonsPlayed === 0 ? (
+              <div className="rounded-2xl border border-dashed border-line/60 bg-ink-2 px-6 py-14 text-center">
+                <div className="font-display font-bold text-3xl text-bone-3 tracking-tight">
+                  Your career awaits
+                </div>
+                <div className="text-bone-3 text-xs font-mono mt-2 uppercase tracking-widest">
+                  Hit simulate to play your first season
+                </div>
               </div>
-              <div className="max-h-[520px] overflow-y-auto pr-1 space-y-1.5">
-                {seasonsPlayed === 0 ? (
-                  <div className="border border-dashed border-line bg-ink-2 px-5 py-10 text-center">
-                    <div className="font-display text-3xl text-bone-3 uppercase tracking-wide">
-                      Your career awaits
-                    </div>
-                    <div className="text-bone-3 text-xs font-mono mt-2 uppercase tracking-widest">
-                      Hit simulate to play your first season
-                    </div>
-                  </div>
-                ) : (
-                  [...career.seasons].reverse().map((s, i) => (
-                    <SeasonRow
-                      key={s.index}
-                      season={s}
-                      startYear={career.startYear}
-                      highlight={i === 0}
-                    />
-                  ))
-                )}
+            ) : (
+              <div className="max-h-[480px] overflow-y-auto space-y-2 pr-1">
+                {[...career.seasons].reverse().map((s, i) => (
+                  <SeasonRow
+                    key={s.index}
+                    season={s}
+                    startYear={career.startYear}
+                    highlight={i === 0}
+                  />
+                ))}
               </div>
-            </div>
-          </section>
+            )}
+          </div>
         </div>
       </main>
     </div>
   );
 }
 
-function KPI({
+function InfoChip({
   label,
   value,
   accent,
@@ -199,32 +240,46 @@ function KPI({
 }) {
   const c = accent === "pitch" ? "text-pitch" : accent === "gold" ? "text-gold" : "text-bone";
   return (
-    <div className="border border-line bg-ink-2 px-3 py-2">
-      <div className="text-[9px] uppercase tracking-[0.3em] text-bone-3 font-mono">
-        {label}
-      </div>
-      <div className={`num text-lg leading-tight ${c}`}>{value}</div>
+    <div className="rounded-xl border border-line bg-ink-3 px-3 py-2">
+      <div className="text-[9px] text-bone-3 font-mono uppercase tracking-widest">{label}</div>
+      <div className={`num text-sm font-bold ${c}`}>{value}</div>
     </div>
   );
 }
 
-function BigKPI({
+function KpiTile({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: "pitch" | "gold";
+}) {
+  const c = accent === "pitch" ? "text-pitch" : accent === "gold" ? "text-gold" : "text-bone";
+  return (
+    <div className="rounded-xl border border-line bg-ink-2 px-3 py-3">
+      <div className="text-[9px] text-bone-3 font-mono uppercase tracking-widest">{label}</div>
+      <div className={`num text-xl font-bold mt-1 leading-tight ${c}`}>{value}</div>
+    </div>
+  );
+}
+
+function BigKpi({
   label,
   value,
   color = "text-bone",
+  glow = "",
 }: {
   label: string;
   value: number;
   color?: string;
+  glow?: string;
 }) {
   return (
-    <div className="border border-line bg-ink-2 p-4 bg-noise relative overflow-hidden">
-      <div className="text-[10px] uppercase tracking-[0.3em] text-bone-3 font-mono">
-        {label}
-      </div>
-      <div className={`font-display text-6xl leading-none mt-2 ${color}`}>
-        {value}
-      </div>
+    <div className="rounded-2xl border border-line bg-ink-2 p-5 relative overflow-hidden">
+      <div className="text-[10px] text-bone-3 font-mono uppercase tracking-widest mb-2">{label}</div>
+      <div className={`font-display font-bold text-6xl leading-none ${color} ${glow}`}>{value}</div>
     </div>
   );
 }

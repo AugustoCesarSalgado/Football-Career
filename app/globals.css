@@ -1,32 +1,38 @@
 @import "tailwindcss";
 
 @theme {
-  /* Core ink / bone palette */
-  --color-ink: #07090a;
-  --color-ink-2: #0d1011;
-  --color-ink-3: #14181a;
-  --color-ink-4: #1c2124;
-  --color-line: #262c30;
-  --color-bone: #f2efe6;
-  --color-bone-2: #d6d2c4;
-  --color-bone-3: #8a8678;
+  /* ── Surfaces — cobalt-dark ── */
+  --color-ink: #07090f;
+  --color-ink-2: #0e1420;
+  --color-ink-3: #162032;
+  --color-ink-4: #1c2a3e;
+  --color-line: #1d2d3f;
 
-  /* Accent — pitch green + gold */
-  --color-pitch: #6dff7a;
-  --color-pitch-2: #8effa0;
-  --color-pitch-deep: #1a3f1f;
-  --color-gold: #f5c542;
-  --color-gold-2: #ffe082;
-  --color-gold-deep: #6a4d09;
-  --color-blood: #ff4d4d;
+  /* ── Text — cool blue-white ── */
+  --color-bone: #d8e2f0;
+  --color-bone-2: #7a8fa8;
+  --color-bone-3: #3e526a;
+
+  /* ── Accent 1 — teal (was neon green) ── */
+  --color-pitch: #2dd4bf;
+  --color-pitch-2: #5eead4;
+  --color-pitch-deep: #032922;
+
+  /* ── Accent 2 — amber (was gold) ── */
+  --color-gold: #f59e0b;
+  --color-gold-2: #fcd34d;
+  --color-gold-deep: #451a03;
+
+  /* ── Alert ── */
+  --color-blood: #f43f5e;
   --color-card-yellow: #ffd84d;
 
-  /* Typography */
+  /* ── Typography ── */
   --font-display: var(--font-display);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
 
-  /* Custom easings & animations */
+  /* ── Easings ── */
   --ease-stadium: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -42,18 +48,17 @@ body {
   font-feature-settings: "ss01", "cv11", "tnum";
 }
 
-/* Stadium-floodlight grid background, used selectively */
+/* Diagonal diamond mesh — replaces the square grid */
 .bg-pitch-grid {
   background-image:
     radial-gradient(
-      ellipse 80% 60% at 50% 0%,
-      rgba(109, 255, 122, 0.08),
-      transparent 60%
+      ellipse 80% 50% at 50% 0%,
+      rgba(45, 212, 191, 0.07),
+      transparent 65%
     ),
-    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-  background-size: 100% 100%, 64px 64px, 64px 64px;
-  background-position: 0 0, 0 0, 0 0;
+    linear-gradient(135deg, rgba(255, 255, 255, 0.014) 1px, transparent 1px),
+    linear-gradient(-135deg, rgba(255, 255, 255, 0.014) 1px, transparent 1px);
+  background-size: 100% 100%, 42px 42px, 42px 42px;
 }
 
 .bg-noise {
@@ -64,28 +69,46 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  opacity: 0.05;
+  opacity: 0.04;
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 
-/* Display, ALL-CAPS, condensed */
+/* Syne display — wide geometric, tighter tracking */
 .font-display {
-  font-family: var(--font-display), Impact, sans-serif;
-  letter-spacing: 0.01em;
+  font-family: var(--font-display), 'Trebuchet MS', sans-serif;
+  letter-spacing: -0.02em;
 }
+
 .num {
   font-family: var(--font-mono), ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
 }
 
-/* Stripe / kit pattern */
+/* Card diagonal pattern (replaces kit-stripes) */
+.card-diagonal {
+  background-image: repeating-linear-gradient(
+    -55deg,
+    rgba(255, 255, 255, 0.018) 0 1px,
+    transparent 1px 20px
+  );
+}
+
+/* Legacy kit-stripes alias */
 .kit-stripes {
   background-image: repeating-linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.03) 0 2px,
-    transparent 2px 14px
+    -55deg,
+    rgba(255, 255, 255, 0.02) 0 1px,
+    transparent 1px 18px
   );
+}
+
+/* Glow effects */
+.glow-teal {
+  text-shadow: 0 0 24px rgba(45, 212, 191, 0.55);
+}
+.glow-amber {
+  text-shadow: 0 0 24px rgba(245, 158, 11, 0.55);
 }
 
 ::selection {
@@ -94,35 +117,42 @@ body {
 }
 
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: var(--color-ink-2);
 }
 ::-webkit-scrollbar-thumb {
   background: var(--color-line);
-  border-radius: 4px;
+  border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-bone-3);
 }
 
+/* ── Keyframes ── */
 @keyframes rise-in {
   0% {
     opacity: 0;
-    transform: translateY(18px);
+    transform: translateY(20px) scale(0.97);
   }
   100% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
+
+@keyframes fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
 @keyframes count-pop {
   0% {
     opacity: 0;
-    transform: scale(0.92);
-    filter: blur(6px);
+    transform: scale(0.82);
+    filter: blur(8px);
   }
   100% {
     opacity: 1;
@@ -130,34 +160,25 @@ body {
     filter: blur(0);
   }
 }
+
 @keyframes ticker {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
+
 @keyframes pulse-ring {
   0% {
-    box-shadow: 0 0 0 0 rgba(109, 255, 122, 0.55);
+    box-shadow: 0 0 0 0 rgba(45, 212, 191, 0.55);
   }
   100% {
-    box-shadow: 0 0 0 22px rgba(109, 255, 122, 0);
+    box-shadow: 0 0 0 22px rgba(45, 212, 191, 0);
   }
 }
+
 @keyframes flicker {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  47%,
-  49% {
-    opacity: 0.4;
-  }
-  48% {
-    opacity: 0.85;
-  }
+  0%, 100% { opacity: 1; }
+  47%, 49% { opacity: 0.4; }
+  48% { opacity: 0.85; }
 }
 
 @keyframes float-a {
@@ -172,10 +193,12 @@ body {
   0%, 100% { transform: translate(0, 0) rotate(var(--rot, 0deg)); }
   50% { transform: translate(-7px, -12px) rotate(calc(var(--rot, 0deg) + 1deg)); }
 }
+
 @keyframes shimmer {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
+  0% { background-position: 200% 50%; }
+  100% { background-position: 0% 50%; }
 }
+
 @keyframes scroll-cue {
   0% { transform: translateY(0); opacity: 0; }
   30% { opacity: 1; }
@@ -183,11 +206,25 @@ body {
   100% { transform: translateY(12px); opacity: 0; }
 }
 
+@keyframes arrow-grow {
+  0% { transform: scaleX(0); }
+  100% { transform: scaleX(1); }
+}
+
+@keyframes pulse-ring-box {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(1.12); opacity: 0; }
+}
+
+/* ── Utility classes ── */
 .anim-rise {
-  animation: rise-in 0.7s var(--ease-stadium) both;
+  animation: rise-in 0.65s var(--ease-stadium) both;
 }
 .anim-pop {
-  animation: count-pop 0.6s var(--ease-stadium) both;
+  animation: count-pop 0.55s var(--ease-stadium) both;
+}
+.anim-fade {
+  animation: fade-in 0.5s var(--ease-stadium) both;
 }
 .anim-ticker {
   animation: ticker 38s linear infinite;
@@ -215,24 +252,10 @@ html {
   scroll-behavior: smooth;
 }
 
-.delay-100 {
-  animation-delay: 0.1s;
-}
-.delay-200 {
-  animation-delay: 0.2s;
-}
-.delay-300 {
-  animation-delay: 0.3s;
-}
-.delay-400 {
-  animation-delay: 0.4s;
-}
-.delay-500 {
-  animation-delay: 0.5s;
-}
-.delay-600 {
-  animation-delay: 0.6s;
-}
-.delay-700 {
-  animation-delay: 0.7s;
-}
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
+.delay-500 { animation-delay: 0.5s; }
+.delay-600 { animation-delay: 0.6s; }
+.delay-700 { animation-delay: 0.7s; }

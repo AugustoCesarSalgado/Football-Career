@@ -3,11 +3,11 @@
 import type { Position } from "@/types";
 import { POSITION_LABEL } from "@/lib/squadNumbers";
 
-const POSITIONS: Array<{ id: Position; label: string; short: string; desc: string }> = [
-  { id: "GK", label: "Arquero", short: "GK", desc: "Atajadas · vallas invictas" },
-  { id: "DEF", label: "Defensor", short: "DEF", desc: "Marcas · intercepciones" },
-  { id: "MID", label: "Mediocampista", short: "MID", desc: "Balance · creación" },
-  { id: "FWD", label: "Delantero", short: "FWD", desc: "Goles · finalización" },
+const POSITIONS: Array<{ id: Position; short: string; desc: string; icon: string }> = [
+  { id: "GK", short: "GK", desc: "Atajadas · vallas invictas", icon: "🧤" },
+  { id: "DEF", short: "DEF", desc: "Marcas · intercepciones", icon: "🛡️" },
+  { id: "MID", short: "MID", desc: "Balance · creación", icon: "⚙️" },
+  { id: "FWD", short: "FWD", desc: "Goles · finalización", icon: "⚡" },
 ];
 
 export function PositionSelector({
@@ -18,7 +18,7 @@ export function PositionSelector({
   onChange: (p: Position) => void;
 }) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+    <div className="flex gap-2 flex-wrap">
       {POSITIONS.map((p) => {
         const selected = p.id === value;
         return (
@@ -26,23 +26,22 @@ export function PositionSelector({
             key={p.id}
             type="button"
             onClick={() => onChange(p.id)}
-            className={`relative flex flex-col items-start gap-1 px-4 py-4 border text-left transition-all ${
+            className={`group flex-1 min-w-[80px] flex flex-col items-center gap-2 px-4 py-5 rounded-2xl border text-center transition-all duration-200 ${
               selected
-                ? "bg-gold/10 border-gold text-bone"
-                : "bg-ink-2 border-line text-bone-2 hover:border-bone-3 hover:bg-ink-3"
+                ? "bg-gold/10 border-gold/60 ring-1 ring-gold/25 text-bone"
+                : "bg-ink-2 border-line text-bone-2 hover:border-bone-3/40 hover:bg-ink-3"
             }`}
           >
+            <span className="text-2xl">{p.icon}</span>
             <span
-              className={`font-display text-3xl tracking-wide leading-none ${
-                selected ? "text-gold" : "text-bone"
+              className={`font-display font-bold text-2xl leading-none tracking-tight ${
+                selected ? "text-gold glow-amber" : "text-bone"
               }`}
             >
               {p.short}
             </span>
-            <span className="text-sm font-medium">{POSITION_LABEL[p.id]}</span>
-            <span className="text-[10px] uppercase tracking-widest text-bone-3 font-mono">
-              {p.desc}
-            </span>
+            <span className="text-xs text-bone-3 font-medium leading-tight">{POSITION_LABEL[p.id]}</span>
+            <span className="text-[10px] text-bone-3/60 font-mono hidden sm:block">{p.desc}</span>
           </button>
         );
       })}

@@ -46,14 +46,25 @@ All pages use `"use client"` and include a hydration guard to prevent SSR/localS
 | `lib/offers.ts` | Renewal and transfer offer generation |
 | `lib/leagues.ts` | ~270 clubs across 14 countries, organised by tier 1–4 |
 | `lib/competitions.ts` | Continental and national tournament definitions + bonus trophy gates |
-| `lib/countries.ts` | Country metadata and flag mapping |
+| `lib/countries.ts` | Country metadata, flag mapping, `COUNTRY_FOLDER` and `NATIONAL_TEAM_URL` maps |
+| `lib/logos.ts` | URL resolvers for club crests, tournament logos, national team logos, and SVG fallback helpers |
+| `lib/names.ts` | Country-specific first/last name pools for 15 nationalities; `randomName(countryCode)` |
+| `lib/format.ts` | `fmtMoney` (€-formatted) and `ordinal` display helpers |
+| `lib/squadNumbers.ts` | Position→squad-number pools; `POSITION_LABEL` (Spanish labels: Arquero, Defensor…) |
 | `lib/random.ts` | RNG helpers (`rndInt`, `chance`, `pick`, `weighted`) used everywhere |
+
+### Conventions
+
+- Import alias `@/` maps to the project root (`@/types`, `@/lib/store`, `@/components/…`).
+- `lib/store.ts` is marked `"use client"` because it accesses `localStorage` — only ever import it from client components.
+- All pages follow the same **hydration guard** pattern: `const [hydrated, setHydrated] = useState(false)` + `useEffect(() => setHydrated(true), [])`. Return a loading shell until `hydrated` is true to avoid SSR/localStorage mismatches.
+- Every simulated season produces exactly two offers: `pendingOffers: { renew: Offer; transfer: Offer }`. There is no "decline all" path.
 
 ### Styling
 
 Tailwind CSS v4 is configured via `postcss.config.mjs` (`@tailwindcss/postcss`). Custom theme tokens (colors, animations, `.bg-pitch-grid`) live in `app/globals.css` — not in a `tailwind.config.*` file.
 
-Palette: `ink` (dark bg), `bone` (light text), `pitch` (green accent `#6dff7a`), `gold`.
+Palette: `ink` / `ink-2..4` (dark bg scale), `bone` / `bone-2..3` (light text scale), `line` (border), `pitch` (green accent `#6dff7a`), `pitch-2` / `pitch-deep`, `gold` / `gold-2` / `gold-deep`, `blood` (red `#ff4d4d`). Custom easing `ease-stadium` is defined in globals.
 
 ### Images
 

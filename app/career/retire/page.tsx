@@ -45,109 +45,63 @@ export default function RetirePage() {
         return acc;
       },
       {
-        goals: 0,
-        assists: 0,
-        apps: 0,
-        cleanSheets: 0,
-        saves: 0,
-        tackles: 0,
-        intercepts: 0,
-        yellow: 0,
-        red: 0,
-        ratingSum: 0,
-        caps: 0,
-        ntGoals: 0,
+        goals: 0, assists: 0, apps: 0, cleanSheets: 0, saves: 0,
+        tackles: 0, intercepts: 0, yellow: 0, red: 0,
+        ratingSum: 0, caps: 0, ntGoals: 0,
       },
     );
     const avgRating = +(totals.ratingSum / Math.max(1, career.seasons.length)).toFixed(2);
 
     type Stint = {
-      id: string;
-      name: string;
-      league: string;
-      from: number;
-      to: number;
-      transferFeeEur?: number;
+      id: string; name: string; league: string;
+      from: number; to: number; transferFeeEur?: number;
     };
     const stints: Stint[] = [];
     let current: Stint | null = null;
     for (const s of career.seasons) {
       const year = career.startYear + (s.age - 18);
       if (!current || current.id !== s.clubId) {
-        current = {
-          id: s.clubId,
-          name: s.clubName,
-          league: s.league,
-          from: year,
-          to: year,
-        };
+        current = { id: s.clubId, name: s.clubName, league: s.league, from: year, to: year };
         stints.push(current);
       } else {
         current.to = year;
       }
-      // The transfer fee on the *last* season of a stint is the fee paid
-      // by the *next* club to acquire the player.
-      if (s.transferFeeEur && current) {
-        current.transferFeeEur = s.transferFeeEur;
-      }
     }
-    // Attach the fee to the *destination* of the transfer (next stint),
-    // since that's the club that paid.
     for (let i = 0; i < stints.length - 1; i++) {
-      const next = stints[i + 1];
       const lastSeasonOfStint = career.seasons.findLast(
-        (s) =>
-          s.clubId === stints[i].id &&
-          career.startYear + (s.age - 18) === stints[i].to,
+        (s) => s.clubId === stints[i].id && career.startYear + (s.age - 18) === stints[i].to,
       );
       if (lastSeasonOfStint?.transferFeeEur) {
-        next.transferFeeEur = lastSeasonOfStint.transferFeeEur;
+        stints[i + 1].transferFeeEur = lastSeasonOfStint.transferFeeEur;
       }
     }
-    const clubs = stints;
 
     const trophies: TrophyKind[] = [];
     for (const s of career.seasons) {
       const year = career.startYear + (s.age - 18);
-      if (s.club.leagueWin)
-        trophies.push({ kind: "league", name: s.league, year });
+      if (s.club.leagueWin) trophies.push({ kind: "league", name: s.league, year });
       if (s.club.nationalCupWon)
-        trophies.push({
-          kind: "cup",
-          name: NATIONAL_CUPS[s.clubCountry]?.name ?? "Domestic Cup",
-          year,
-        });
+        trophies.push({ kind: "cup", name: NATIONAL_CUPS[s.clubCountry]?.name ?? "Domestic Cup", year });
       if (s.club.continentalResult === "champion" && s.club.continentalCompetition) {
         const comp = COMP_BY_ID[s.club.continentalCompetition];
-        if (comp)
-          trophies.push({
-            kind: "continental",
-            compId: comp.id,
-            name: comp.name,
-            year,
-          });
+        if (comp) trophies.push({ kind: "continental", compId: comp.id, name: comp.name, year });
       }
       for (const bonusId of s.club.bonusTrophies ?? []) {
         const comp = COMP_BY_ID[bonusId];
-        if (comp)
-          trophies.push({ kind: "bonus", compId: comp.id, name: comp.name, year });
+        if (comp) trophies.push({ kind: "bonus", compId: comp.id, name: comp.name, year });
       }
       if (s.national.tournament?.result === "champion")
-        trophies.push({
-          kind: "national",
-          name: s.national.tournament.name,
-          year,
-        });
-      for (const a of s.awards)
-        trophies.push({ kind: "award", name: a, year });
+        trophies.push({ kind: "national", name: s.national.tournament.name, year });
+      for (const a of s.awards) trophies.push({ kind: "award", name: a, year });
     }
-    return { totals, avgRating, clubs, trophies };
+
+    return { totals, avgRating, clubs: stints, trophies };
   }, [career]);
 
   if (!hydrated || !career || !aggregates) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <span className="font-mono text-bone-3 uppercase tracking-[0.3em] text-xs">
+        <span className="font-mono text-bone-3 uppercase tracking-widest text-xs">
           loading career…
         </span>
       </div>
@@ -156,191 +110,156 @@ export default function RetirePage() {
 
   const { totals, avgRating, clubs, trophies } = aggregates;
   const verdict = makeVerdict(trophies.length, avgRating, totals.goals);
+  const label = scoreLabel(trophies.length, avgRating);
 
   return (
     <div className="min-h-screen flex flex-col bg-ink">
-      <SiteHeader rightSlot={<span>Retired</span>} />
+      <SiteHeader rightSlot={<span className="text-gold">Retired</span>} />
 
       <main className="flex-1 bg-pitch-grid">
-        <div className="max-w-[1500px] mx-auto px-8 py-14 space-y-12">
-          {/* Hero */}
-          <div className="grid grid-cols-12 gap-8 items-end anim-rise">
-            <div className="col-span-12 lg:col-span-8">
-              <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.4em] text-gold font-mono">
-                <span className="inline-block w-10 h-px bg-gold" />
-                {career.startYear} — {career.startYear + 22} · final whistle
-              </div>
-              <h1 className="font-display text-[clamp(64px,10vw,170px)] leading-[0.84] tracking-tight text-bone uppercase mt-2">
-                {career.player.firstName}
-                <br />
-                <span className="text-gold">{career.player.lastName}</span>
-              </h1>
-              <p className="mt-4 text-bone-2 text-lg max-w-2xl">
-                Hangs up the boots at 40. {verdict}
-              </p>
+        <div className="max-w-[1400px] mx-auto px-6 py-14 space-y-12">
+
+          {/* ── Hero — CENTERED (not left-heavy like before) ── */}
+          <div className="text-center anim-rise">
+            <div className="inline-flex items-center gap-2 text-[11px] text-gold font-mono uppercase tracking-widest mb-5">
+              <span className="w-8 h-px bg-gold" />
+              {career.startYear} — {career.startYear + 22} · final whistle
+              <span className="w-8 h-px bg-gold" />
             </div>
-            <div className="col-span-12 lg:col-span-4">
-              <div className="border border-gold/40 bg-gold/5 p-5">
-                <div className="text-[10px] uppercase tracking-[0.3em] text-gold-2 font-mono">
-                  Legacy verdict
+            <h1 className="font-display font-bold text-[clamp(56px,10vw,160px)] leading-[0.88] tracking-tight">
+              <span className="text-bone">{career.player.firstName}</span>
+              <br />
+              <span className="text-gold glow-amber">{career.player.lastName}</span>
+            </h1>
+            <p className="mt-5 text-bone-2 text-lg max-w-2xl mx-auto leading-relaxed">
+              Hangs up the boots at 40. {verdict}
+            </p>
+
+            {/* Verdict card — centered, full-width max */}
+            <div className="mt-8 max-w-md mx-auto rounded-2xl border border-gold/30 bg-gold/5 p-6">
+              <div className="text-[11px] text-gold font-mono uppercase tracking-widest mb-2">
+                Legacy verdict
+              </div>
+              <div className="font-display font-bold text-5xl text-gold leading-none glow-amber">
+                {label}
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-line bg-ink-3 px-3 py-2">
+                  <div className="text-[9px] text-bone-3 font-mono uppercase tracking-widest">Avg rating</div>
+                  <div className="num text-xl font-bold text-bone mt-0.5">{avgRating.toFixed(2)}</div>
                 </div>
-                <div className="font-display text-5xl text-gold leading-none mt-2 tracking-wide">
-                  {scoreLabel(trophies.length, avgRating)}
-                </div>
-                <div className="mt-3 grid grid-cols-2 gap-2 text-bone">
-                  <div>
-                    <div className="text-[9px] uppercase tracking-[0.3em] text-bone-3 font-mono">
-                      Avg rating
-                    </div>
-                    <div className="num text-xl">{avgRating.toFixed(2)}</div>
-                  </div>
-                  <div>
-                    <div className="text-[9px] uppercase tracking-[0.3em] text-bone-3 font-mono">
-                      Trophies
-                    </div>
-                    <div className="num text-xl text-gold">{trophies.length}</div>
-                  </div>
+                <div className="rounded-xl border border-gold/30 bg-gold/5 px-3 py-2">
+                  <div className="text-[9px] text-bone-3 font-mono uppercase tracking-widest">Trophies</div>
+                  <div className="num text-xl font-bold text-gold mt-0.5">{trophies.length}</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Career totals */}
+          {/* ── Career totals ── */}
           <section>
-            <h2 className="font-display text-3xl uppercase tracking-wide text-bone mb-4">
+            <h2 className="font-display font-bold text-2xl tracking-tight text-bone mb-4">
               Career totals
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               <BigStat label="Goals" value={totals.goals} accent="pitch" />
               <BigStat label="Assists" value={totals.assists} />
               <BigStat label="Apps" value={totals.apps} />
               <BigStat label="Caps (NT)" value={totals.caps} accent="gold" />
               <BigStat label="NT goals" value={totals.ntGoals} accent="gold" />
-              <BigStat
-                label="Yellow"
-                value={totals.yellow}
-              />
-              {totals.cleanSheets > 0 && (
-                <BigStat label="Clean sheets" value={totals.cleanSheets} />
-              )}
-              {totals.saves > 0 && (
-                <BigStat label="Saves" value={totals.saves} />
-              )}
-              {totals.tackles > 0 && (
-                <BigStat label="Tackles" value={totals.tackles} />
-              )}
-              {totals.intercepts > 0 && (
-                <BigStat label="Intercepts" value={totals.intercepts} />
-              )}
+              <BigStat label="Yellow" value={totals.yellow} />
+              {totals.cleanSheets > 0 && <BigStat label="Clean sheets" value={totals.cleanSheets} />}
+              {totals.saves > 0 && <BigStat label="Saves" value={totals.saves} />}
+              {totals.tackles > 0 && <BigStat label="Tackles" value={totals.tackles} />}
+              {totals.intercepts > 0 && <BigStat label="Intercepts" value={totals.intercepts} />}
             </div>
           </section>
 
-          {/* Clubs journey */}
+          {/* ── Club journey — VERTICAL list (was horizontal scroll) ── */}
           <section>
-            <div className="flex items-baseline justify-between mb-4">
-              <h2 className="font-display text-3xl uppercase tracking-wide text-bone">
-                The journey
-              </h2>
-              <span className="text-[10px] uppercase tracking-[0.3em] text-bone-3 font-mono">
+            <div className="flex items-baseline justify-between mb-5">
+              <h2 className="font-display font-bold text-2xl tracking-tight text-bone">The journey</h2>
+              <span className="text-[11px] text-bone-3 font-mono uppercase tracking-widest">
                 {clubs.length} stop{clubs.length === 1 ? "" : "s"} · {career.seasons.length} seasons
               </span>
             </div>
 
-            <div className="border border-line bg-ink-2 px-6 py-8 overflow-x-auto">
-              <ol className="flex items-stretch min-w-max">
-                {clubs.map((c, i) => (
-                  <li key={`${c.id}-${i}`} className="flex items-stretch">
-                    <div
-                      className="flex flex-col items-center gap-2 w-44 anim-rise"
-                      style={{ animationDelay: `${120 + i * 90}ms` }}
-                    >
-                      <div className="relative flex items-center justify-center size-20 border border-line bg-ink-3">
-                        <ClubLogo
-                          name={c.name}
-                          url={clubLogoUrl(c.id)}
-                          size={56}
-                        />
-                        {i === 0 && (
-                          <span className="absolute -top-2 -left-2 text-[9px] font-mono uppercase tracking-[0.25em] text-pitch bg-ink px-1.5">
-                            start
-                          </span>
-                        )}
-                        {i === clubs.length - 1 && i > 0 && (
-                          <span className="absolute -top-2 -right-2 text-[9px] font-mono uppercase tracking-[0.25em] text-gold bg-ink px-1.5">
-                            final
-                          </span>
-                        )}
-                      </div>
-                      <div className="font-display text-base text-bone leading-tight text-center px-1">
+            <div className="relative space-y-0">
+              {/* Vertical timeline line */}
+              <div className="absolute left-[27px] top-0 bottom-0 w-px bg-gradient-to-b from-pitch/40 via-line to-line/20" />
+
+              {clubs.map((c, i) => (
+                <div key={`${c.id}-${i}`} className="relative flex items-start gap-5 pl-[60px] pb-6 anim-rise" style={{ animationDelay: `${100 + i * 90}ms` }}>
+                  {/* Circle on timeline */}
+                  <div
+                    className={`absolute left-3 top-4 size-6 rounded-full border-2 flex items-center justify-center z-10 ${
+                      i === 0
+                        ? "border-pitch bg-pitch-deep"
+                        : i === clubs.length - 1
+                        ? "border-gold bg-gold-deep"
+                        : "border-line bg-ink-3"
+                    }`}
+                  >
+                    <span className={`font-mono text-[9px] font-bold ${
+                      i === 0 ? "text-pitch" : i === clubs.length - 1 ? "text-gold" : "text-bone-3"
+                    }`}>{i + 1}</span>
+                  </div>
+
+                  {/* Card */}
+                  <div className="flex-1 rounded-2xl border border-line bg-ink-2 p-4 flex items-center gap-4">
+                    <ClubLogo name={c.name} url={clubLogoUrl(c.id)} size={48} className="shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-display font-bold text-lg text-bone leading-tight tracking-tight">
                         {c.name}
                       </div>
-                      <div className="text-[10px] uppercase tracking-[0.25em] text-bone-3 font-mono">
+                      <div className="text-[11px] text-bone-3 font-mono uppercase tracking-widest">
                         {c.league}
                       </div>
-                      <div className="num text-bone-2 text-xs tracking-widest">
-                        {c.from === c.to ? `${c.from}` : `${c.from} — ${c.to}`}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="num text-bone-2 text-sm font-bold">
+                        {c.from === c.to ? `${c.from}` : `${c.from} – ${c.to}`}
                       </div>
-                      <div className="text-[10px] text-bone-3 font-mono">
+                      <div className="text-[11px] text-bone-3 font-mono">
                         {c.to - c.from + 1}y
                       </div>
+                      {c.transferFeeEur && (
+                        <div className="text-[10px] text-gold font-mono mt-0.5">
+                          {fmtMoney(c.transferFeeEur)}
+                        </div>
+                      )}
                     </div>
-                    {i < clubs.length - 1 && (
-                      <TransferArrow fee={clubs[i + 1].transferFeeEur} />
-                    )}
-                  </li>
-                ))}
-              </ol>
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
 
-          {/* Trophy room */}
+          {/* ── Trophy room ── */}
           <section>
-            <h2 className="font-display text-3xl uppercase tracking-wide text-bone mb-4">
+            <h2 className="font-display font-bold text-2xl tracking-tight text-bone mb-5">
               Trophy room
             </h2>
             <TrophyShelf trophies={trophies} />
           </section>
 
-          {/* Action */}
+          {/* ── CTA ── */}
           <div className="pt-4 flex flex-wrap items-center gap-4 anim-rise">
             <button
               onClick={() => {
                 reset();
                 router.push("/");
               }}
-              className="bg-pitch text-ink px-8 py-5 font-display text-3xl tracking-wider uppercase hover:bg-pitch-2 transition-colors"
+              className="bg-pitch text-ink px-8 py-5 rounded-2xl font-display font-bold text-2xl tracking-tight hover:bg-pitch-2 transition-all hover:scale-[1.01]"
             >
               Begin a new career →
             </button>
-            <span className="text-[10px] uppercase tracking-[0.3em] text-bone-3 font-mono">
+            <span className="text-[11px] text-bone-3 font-mono uppercase tracking-widest">
               This career will be wiped.
             </span>
           </div>
         </div>
       </main>
-    </div>
-  );
-}
-
-function TransferArrow({ fee }: { fee?: number }) {
-  return (
-    <div className="flex flex-col items-center justify-center mx-2 sm:mx-4 min-w-[68px] sm:min-w-[100px] pt-6">
-      <div className="text-[9px] uppercase tracking-[0.3em] text-bone-3 font-mono mb-1">
-        Transfer
-      </div>
-      <div className="relative w-full h-px bg-gradient-to-r from-bone-3/40 via-bone-3 to-pitch">
-        <svg
-          viewBox="0 0 16 12"
-          className="absolute -right-1 top-1/2 -translate-y-1/2 w-4 h-3 text-pitch"
-          fill="currentColor"
-          aria-hidden
-        >
-          <path d="M0 5 H10 V2 L16 6 L10 10 V7 H0 Z" />
-        </svg>
-      </div>
-      <div className="num text-xs text-gold mt-1 whitespace-nowrap">
-        {fee ? fmtMoney(fee) : "free"}
-      </div>
     </div>
   );
 }

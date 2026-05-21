@@ -60,24 +60,44 @@ export function BigStat({
       : accent === "blood"
       ? "text-blood"
       : "text-bone";
+
+  const glowClass =
+    accent === "pitch" ? "glow-teal" : accent === "gold" ? "glow-amber" : "";
+
   return (
-    <div className="border border-line bg-ink-2 p-4 relative overflow-hidden anim-rise bg-noise" style={{ animationDelay: `${delayMs}ms` }}>
-      <div className="text-[10px] uppercase tracking-[0.3em] text-bone-3 font-mono">
+    <div
+      className="rounded-2xl border border-line bg-ink-2 p-5 relative overflow-hidden anim-rise"
+      style={{ animationDelay: `${delayMs}ms` }}
+    >
+      <div className="text-[10px] uppercase tracking-widest text-bone-3 font-mono mb-3">
         {label}
       </div>
-      <div className="mt-2 flex items-baseline gap-2">
+      <div className="flex items-end gap-1.5">
         <CountUp
           value={value}
           delayMs={delayMs + 150}
           format={format ?? ((n) => `${Math.round(n)}`)}
-          className={`font-display text-6xl leading-none tracking-wide ${color}`}
+          className={`font-display font-bold text-5xl leading-none ${color} ${glowClass}`}
         />
         {unit && (
-          <span className="text-bone-3 text-xs uppercase tracking-widest font-mono">
+          <span className="text-bone-3 text-xs uppercase tracking-widest font-mono pb-1">
             {unit}
           </span>
         )}
       </div>
+      {/* subtle gradient accent at bottom */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-0.5 opacity-40"
+        style={{
+          background: accent === "pitch"
+            ? "var(--color-pitch)"
+            : accent === "gold"
+            ? "var(--color-gold)"
+            : accent === "blood"
+            ? "var(--color-blood)"
+            : "var(--color-bone-3)",
+        }}
+      />
     </div>
   );
 }

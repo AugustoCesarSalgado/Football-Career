@@ -2,7 +2,9 @@ import { LEAGUES, clubById } from "./leagues";
 import { COMP_BY_ID } from "./competitions";
 import { COUNTRY_FOLDER, NATIONAL_TEAM_URL, flagIso } from "./countries";
 
-/** /public/clubs/{country}/{slug}.png */
+const SVG_CLUB_SLUGS = new Set(["juventus"]);
+
+/** /public/clubs/{country}/{slug}.{png|svg} */
 export function clubLogoUrl(clubId: string): string | null {
   const club = clubById(clubId);
   if (!club || !club.logoSlug) return null;
@@ -12,7 +14,8 @@ export function clubLogoUrl(clubId: string): string | null {
   if (!league) return null;
   const folder = COUNTRY_FOLDER[league.countryCode];
   if (!folder) return null;
-  return `/clubs/${folder}/${club.logoSlug}.png`;
+  const ext = SVG_CLUB_SLUGS.has(club.logoSlug) ? "svg" : "png";
+  return `/clubs/${folder}/${club.logoSlug}.${ext}`;
 }
 
 /** League logos are not part of the local pack — return null. */

@@ -9,70 +9,152 @@ export type TrophyKind =
   | { kind: "national"; name: string; year: number }
   | { kind: "award"; name: string; year: number };
 
+/** Portrait badge card — used in the season debrief trophy room */
 export function TrophyTile({ trophy }: { trophy: TrophyKind }) {
-  const color =
-    trophy.kind === "continental" || trophy.kind === "bonus"
-      ? "border-gold/40 bg-gold/5"
-      : trophy.kind === "national"
-      ? "border-gold/40 bg-gold/5"
-      : trophy.kind === "award"
-      ? "border-gold-2/40 bg-gold/5"
-      : "border-pitch/40 bg-pitch-deep/20";
+  const isPrestige =
+    trophy.kind === "continental" ||
+    trophy.kind === "bonus" ||
+    trophy.kind === "national" ||
+    trophy.kind === "award";
 
-  const icon = renderIcon(trophy);
+  const accentColor = isPrestige ? "gold" : "pitch";
+  const borderCls = isPrestige
+    ? "border-gold/40"
+    : "border-pitch/30";
+  const bgGradient = isPrestige
+    ? "from-gold/10 via-ink-2 to-ink-2"
+    : "from-pitch/8 via-ink-2 to-ink-2";
+  const shimmer = isPrestige;
 
   return (
-    <div className={`flex items-center gap-3 px-3 py-2 border ${color}`} title={trophy.name}>
-      <div className="shrink-0 size-9 flex items-center justify-center">{icon}</div>
-      <div className="min-w-0">
-        <div className="text-[9px] uppercase tracking-[0.25em] text-bone-3 font-mono">
-          {labelFor(trophy)} · {trophy.year}
-        </div>
-        <div className="text-sm font-medium truncate text-bone">{trophy.name}</div>
+    <div
+      className={`relative flex flex-col items-center text-center rounded-2xl border ${borderCls} bg-gradient-to-b ${bgGradient} overflow-hidden p-4 pt-5 gap-2`}
+    >
+      {/* Shimmer line on top for prestige */}
+      {shimmer && (
+        <div
+          className="absolute top-0 left-0 right-0 h-px"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent 0%, var(--color-gold) 50%, transparent 100%)",
+            animation: "shimmer 3s ease-in-out infinite",
+            backgroundSize: "200% 100%",
+          }}
+        />
+      )}
+
+      {/* Kind pill */}
+      <span
+        className={`text-[9px] font-mono uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${
+          isPrestige
+            ? "border-gold/40 text-gold bg-gold/10"
+            : "border-pitch/30 text-pitch bg-pitch/8"
+        }`}
+      >
+        {labelFor(trophy)}
+      </span>
+
+      {/* Large icon */}
+      <div className="flex items-center justify-center size-14 my-1">
+        {renderIcon(trophy, "large")}
       </div>
+
+      {/* Name */}
+      <div className="font-display font-bold text-sm leading-tight text-bone tracking-tight">
+        {trophy.name}
+      </div>
+
+      {/* Year */}
+      <div className="text-[10px] font-mono text-bone-3">{trophy.year}</div>
+
+      {/* Bottom accent line */}
+      <div
+        className="absolute bottom-0 left-4 right-4 h-px opacity-40"
+        style={{
+          background: isPrestige ? "var(--color-gold)" : "var(--color-pitch)",
+        }}
+      />
     </div>
   );
 }
 
-function renderIcon(t: TrophyKind) {
+function renderIcon(t: TrophyKind, size: "small" | "large" = "small") {
+  const lg = size === "large";
   if (t.kind === "continental" || t.kind === "bonus") {
     const src = competitionLogoUrl(t.compId);
-    if (src) return <img src={src} alt={t.name} width={36} height={36} className="object-contain" />;
-    return <CupIcon className="size-7 text-gold" />;
+    const px = t.compId === "conmebol-lib" ? (lg ? 64 : 44) : (lg ? 48 : 32);
+    if (src)
+      return <img src={src} alt={t.name} width={px} height={px} className="object-contain drop-shadow-lg" />;
+    return <CupIcon className={lg ? "size-10 text-gold" : "size-6 text-gold"} />;
   }
   if (t.kind === "national") {
     const slug = NATIONAL_TOURNAMENT_LOGO[t.name];
+    const px = lg ? 48 : 32;
     if (slug)
       return (
-        <img src={`/tournaments/${slug}.svg`} alt={t.name} width={36} height={36} className="object-contain" />
+        <img src={`/tournaments/${slug}.svg`} alt={t.name} width={px} height={px} className="object-contain drop-shadow-lg" />
       );
-    return <FlagIcon className="size-7 text-gold" />;
+    return <FlagIcon className={lg ? "size-10 text-gold" : "size-6 text-gold"} />;
   }
   if (t.kind === "award") {
-    if (t.name === "Golden Boot")
-      return <BootIcon className="size-7 text-gold" />;
-    return <BallonIcon className="size-7 text-gold" />;
+    if (t.name === "Golden Boot") {
+      const px = lg ? 48 : 32;
+      return (
+        <img
+          src="/tournaments/golden-boot.png"
+          alt="Golden Boot"
+          width={px}
+          height={px}
+          className="object-contain drop-shadow-lg"
+          style={lg ? { filter: "drop-shadow(0 0 14px rgba(245,158,11,0.55))" } : undefined}
+        />
+      );
+    }
+    if (t.name === "FIFA The Best") {
+      const px = lg ? 48 : 32;
+      return (
+        <img
+          src="/tournaments/the-best.png"
+          alt="FIFA The Best"
+          width={px}
+          height={px}
+          className="object-contain drop-shadow-lg"
+          style={lg ? { filter: "drop-shadow(0 0 14px rgba(245,158,11,0.55))" } : undefined}
+        />
+      );
+    }
+    if (t.name === "Ballon d'Or") {
+      const px = lg ? 48 : 32;
+      return (
+        <img
+          src="/tournaments/ballon-dor.png"
+          alt="Ballon d'Or"
+          width={px}
+          height={px}
+          className="object-contain drop-shadow-lg"
+          style={lg ? { filter: "drop-shadow(0 0 14px rgba(245,158,11,0.55))" } : undefined}
+        />
+      );
+    }
+    return <BallonIcon className={lg ? "size-10 text-gold" : "size-6 text-gold"} />;
   }
-  if (t.kind === "league") return <CupIcon className="size-7 text-pitch" />;
-  return <CupIcon className="size-7 text-gold" />;
+  if (t.kind === "league")
+    return <CupIcon className={lg ? "size-10 text-pitch" : "size-6 text-pitch"} />;
+  return <CupIcon className={lg ? "size-10 text-gold" : "size-6 text-gold"} />;
 }
 
-function labelFor(t: TrophyKind): string {
+export function labelFor(t: TrophyKind): string {
   switch (t.kind) {
-    case "league":
-      return "League";
-    case "cup":
-      return "Cup";
-    case "continental":
-      return "Continental";
-    case "bonus":
-      return "Bonus";
-    case "national":
-      return "National team";
-    case "award":
-      return "Award";
+    case "league": return "League";
+    case "cup": return "Cup";
+    case "continental": return "Continental";
+    case "bonus": return "Bonus";
+    case "national": return "National team";
+    case "award": return "Award";
   }
 }
+
+export { renderIcon as renderTrophyIcon };
 
 export function CupIcon({ className = "" }: { className?: string }) {
   return (
@@ -86,9 +168,9 @@ export function CupIcon({ className = "" }: { className?: string }) {
   );
 }
 
-export function BallonIcon({ className = "" }: { className?: string }) {
+export function BallonIcon({ className = "", style }: { className?: string; style?: React.CSSProperties }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" className={className} stroke="currentColor" strokeWidth="1.5">
+    <svg viewBox="0 0 24 24" fill="none" className={className} style={style} stroke="currentColor" strokeWidth="1.5">
       <circle cx="12" cy="10" r="6" />
       <path d="M9 16l-1 5 4-2 4 2-1-5" />
       <path d="M12 4v12M6 10h12" />
@@ -104,37 +186,16 @@ export function FlagIcon({ className = "" }: { className?: string }) {
   );
 }
 
-/** Stylized football boot — for the Golden Boot award */
-export function BootIcon({ className = "" }: { className?: string }) {
+export function BootIcon({ className = "", style }: { className?: string; style?: React.CSSProperties }) {
   return (
-    <svg viewBox="0 0 28 18" className={className} aria-label="Football boot">
-      {/* heel + upper */}
+    <svg viewBox="0 0 28 18" className={className} style={style} aria-label="Football boot">
       <path
         d="M2 12 L2 9.5 C2 8.2 3 7.5 4.2 7.5 L7 7.5 L9.5 4.5 C10.2 3.6 11.2 3 12.4 3 L17 3 C20.5 3 23.5 5 25.2 8 C25.7 8.9 26 9.9 26 10.9 L26 12 Z"
         fill="currentColor"
       />
-      {/* lace strip detail */}
-      <path
-        d="M10.5 5 L20 5"
-        stroke="rgba(0,0,0,0.45)"
-        strokeWidth="0.9"
-        strokeLinecap="round"
-        fill="none"
-      />
-      <path
-        d="M11 6.8 L20 6.8"
-        stroke="rgba(0,0,0,0.25)"
-        strokeWidth="0.7"
-        strokeLinecap="round"
-        fill="none"
-      />
-      {/* sole */}
-      <path
-        d="M1 12 L27 12 L26.5 13.5 L1.5 13.5 Z"
-        fill="currentColor"
-        opacity="0.85"
-      />
-      {/* studs */}
+      <path d="M10.5 5 L20 5" stroke="rgba(0,0,0,0.45)" strokeWidth="0.9" strokeLinecap="round" fill="none" />
+      <path d="M11 6.8 L20 6.8" stroke="rgba(0,0,0,0.25)" strokeWidth="0.7" strokeLinecap="round" fill="none" />
+      <path d="M1 12 L27 12 L26.5 13.5 L1.5 13.5 Z" fill="currentColor" opacity="0.85" />
       <rect x="3.2" y="13.5" width="2" height="3.2" rx="0.4" fill="currentColor" />
       <rect x="7.4" y="13.5" width="2" height="3.2" rx="0.4" fill="currentColor" />
       <rect x="11.6" y="13.5" width="2" height="3.2" rx="0.4" fill="currentColor" />
