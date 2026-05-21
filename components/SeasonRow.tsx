@@ -48,6 +48,7 @@ export function SeasonRow({
         url={clubLogoUrl(season.clubId)}
         size={32}
         className="shrink-0"
+        clubId={season.clubId}
       />
 
       <div className="flex-1 min-w-0">

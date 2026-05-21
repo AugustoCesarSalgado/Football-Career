@@ -65,6 +65,7 @@ export function OfferCard({
             url={clubLogoUrl(offer.clubId)}
             size={64}
             className="shrink-0"
+            clubId={offer.clubId}
           />
           <div className="min-w-0">
             <h3 className="font-display font-bold text-2xl leading-tight tracking-tight text-bone">

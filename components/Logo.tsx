@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { Crest } from "./Crest";
 import { flagIso } from "@/lib/countries";
+import { clubLogoStyle } from "@/lib/logos";
 
 interface LogoProps {
   /** Tamaño del logo, usando clases de Tailwind (ej. 'w-10 h-10') */
@@ -73,13 +74,16 @@ export function ClubLogo({
   url,
   size = 64,
   className = "",
+  clubId,
 }: {
   name: string;
   url?: string | null;
   size?: number;
   className?: string;
+  clubId?: string;
 }) {
   const [error, setError] = useState(false);
+  const filterStyle = clubId ? clubLogoStyle(clubId) : undefined;
 
   if (!url || error) {
     return <Crest name={name} size={size} className={className} />;
@@ -92,6 +96,7 @@ export function ClubLogo({
       width={size}
       height={size}
       className={`object-contain ${className}`}
+      style={filterStyle}
       onError={() => setError(true)}
       unoptimized
     />

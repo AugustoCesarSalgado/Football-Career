@@ -36,6 +36,7 @@ export function ResumeBanner({
             url={clubLogoUrl(player.currentClubId)}
             size={36}
             className="shrink-0"
+            clubId={player.currentClubId}
           />
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 text-[10px] text-bone-3 font-mono">

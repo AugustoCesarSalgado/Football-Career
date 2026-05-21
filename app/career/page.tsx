@@ -140,6 +140,7 @@ export default function CareerDashboard() {
                   name={career.player.currentClubName}
                   url={clubLogoUrl(career.player.currentClubId)}
                   size={48}
+                  clubId={career.player.currentClubId}
                 />
                 <div>
                   <div className="text-sm font-semibold text-bone">{career.player.currentClubName}</div>

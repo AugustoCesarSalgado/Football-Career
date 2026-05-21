@@ -85,6 +85,7 @@ export function PlayerCard({
             name={player.currentClubName}
             url={clubLogoUrl(player.currentClubId)}
             size={compact ? 40 : 52}
+            clubId={player.currentClubId}
           />
           <div className="text-right">
             <div className="text-sm font-medium text-bone leading-tight">

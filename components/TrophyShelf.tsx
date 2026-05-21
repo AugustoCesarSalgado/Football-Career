@@ -223,7 +223,7 @@ function renderShelfIcon(g: GroupedTrophy, size: "small" | "large") {
   }
   if (g.kind === "award") {
     if (g.name === "Golden Boot") {
-      const px = lg ? 64 : 36;
+      const px = lg ? 84 : 44;
       return (
         <img
           src="/tournaments/golden-boot.png"

@@ -31,6 +31,7 @@ export default function LandingPage() {
   const [name, setName] = useState<{ first: string; last: string } | null>(null);
   const [clubId, setClubId] = useState<string | null>(null);
   const [number, setNumber] = useState<number | null>(null);
+  const [showClubModal, setShowClubModal] = useState(false);
 
   useEffect(() => {
     if (!countryCode) return;
@@ -157,15 +158,22 @@ export default function LandingPage() {
                   {/* Club */}
                   {club ? (
                     <div className="flex items-center gap-3 rounded-xl border border-line/60 bg-ink-3 p-3">
-                      <ClubLogo name={club.name} url={clubLogoUrl(club.id)} size={44} />
-                      <div>
+                      <ClubLogo name={club.name} url={clubLogoUrl(club.id)} size={44} clubId={club.id} />
+                      <div className="flex-1 min-w-0">
                         <div className="text-[10px] text-bone-3 font-mono uppercase tracking-widest">
                           Starting club
                         </div>
-                        <div className="font-display font-bold text-xl text-bone leading-tight tracking-tight">
+                        <div className="font-display font-bold text-xl text-bone leading-tight tracking-tight truncate">
                           {club.name}
                         </div>
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowClubModal(true)}
+                        className="shrink-0 px-2.5 py-1.5 rounded-lg border border-pitch/40 bg-pitch/10 text-pitch text-[10px] font-mono uppercase tracking-widest hover:bg-pitch/20 transition-colors"
+                      >
+                        Change
+                      </button>
                     </div>
                   ) : (
                     <div className="rounded-xl border border-dashed border-line/60 bg-ink-3 p-4 text-center text-bone-3 text-sm font-mono">
@@ -279,6 +287,131 @@ export default function LandingPage() {
       </main>
 
       <Footer />
+
+      {showClubModal && countryCode && (
+        <ClubModal
+          countryCode={countryCode}
+          selectedId={clubId}
+          onSelect={(id) => { setClubId(id); setShowClubModal(false); }}
+          onClose={() => setShowClubModal(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+const TIER_LABEL: Record<number, string> = { 1: "Elite", 2: "Top", 3: "Mid", 4: "Lower" };
+
+const CM_STYLES = `
+@keyframes cm-backdrop-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cm-backdrop-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes cm-panel-in  { from { opacity: 0; transform: translateY(28px) scale(0.96); } to   { opacity: 1; transform: translateY(0)    scale(1);    } }
+@keyframes cm-panel-out { from { opacity: 1; transform: translateY(0)    scale(1);    } to   { opacity: 0; transform: translateY(28px) scale(0.96); } }
+`;
+const CM_DUR = 260;
+
+function ClubModal({
+  countryCode,
+  selectedId,
+  onSelect,
+  onClose,
+}: {
+  countryCode: string;
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  onClose: () => void;
+}) {
+  const [closing, setClosing] = useState(false);
+
+  function dismiss() {
+    setClosing(true);
+    setTimeout(onClose, CM_DUR);
+  }
+
+  function pick(id: string) {
+    setClosing(true);
+    setTimeout(() => onSelect(id), CM_DUR);
+  }
+
+  const ease = "cubic-bezier(0.22,1,0.36,1)";
+  const dur = `${CM_DUR}ms`;
+
+  const clubs = LEAGUES[countryCode]?.clubs ?? [];
+  const byTier = clubs.reduce<Record<number, typeof clubs>>((acc, c) => {
+    (acc[c.tier] ??= []).push(c);
+    return acc;
+  }, {});
+  const tiers = Object.keys(byTier).map(Number).sort();
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      style={{
+        backdropFilter: "blur(6px)",
+        animation: `${closing ? "cm-backdrop-out" : "cm-backdrop-in"} ${dur} ease both`,
+        background: "rgba(7,9,15,0.85)",
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget) dismiss(); }}
+    >
+      <style>{CM_STYLES}</style>
+
+      <div
+        className="w-full max-w-lg rounded-2xl border border-line bg-ink-2 overflow-hidden"
+        style={{
+          maxHeight: "80vh",
+          display: "flex",
+          flexDirection: "column",
+          animation: `${closing ? "cm-panel-out" : "cm-panel-in"} ${dur} ${ease} both`,
+        }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-line/60">
+          <div>
+            <div className="text-[10px] font-mono uppercase tracking-widest text-bone-3 mb-0.5">Identity card</div>
+            <h3 className="font-display font-bold text-lg text-bone tracking-tight">Choose your starting club</h3>
+          </div>
+          <button
+            type="button"
+            onClick={dismiss}
+            className="size-8 flex items-center justify-center rounded-lg border border-line text-bone-3 hover:text-bone hover:border-bone-3/40 transition-colors text-lg leading-none"
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Scrollable list */}
+        <div className="overflow-y-auto p-5 space-y-5">
+          {tiers.map((tier) => (
+            <div key={tier}>
+              <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-bone-3 mb-2.5 flex items-center gap-2">
+                <span className="flex-1 h-px bg-line/60" />
+                {TIER_LABEL[tier] ?? `Tier ${tier}`}
+                <span className="flex-1 h-px bg-line/60" />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {byTier[tier].map((c) => {
+                  const active = c.id === selectedId;
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      title={c.shortName}
+                      onClick={() => pick(c.id)}
+                      className={`size-14 flex items-center justify-center rounded-xl border transition-all ${
+                        active
+                          ? "border-pitch bg-pitch/10 shadow-[0_0_12px_rgba(45,212,191,0.35)]"
+                          : "border-line bg-ink-3 hover:border-bone-3/40 hover:bg-ink-4"
+                      }`}
+                    >
+                      <ClubLogo name={c.name} url={clubLogoUrl(c.id)} size={36} clubId={c.id} />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

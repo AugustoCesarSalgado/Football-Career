@@ -175,7 +175,7 @@ export default function RetirePage() {
             </div>
           </section>
 
-          {/* ── Club journey — VERTICAL list (was horizontal scroll) ── */}
+          {/* ── Club journey — horizontal wrapping ── */}
           <section>
             <div className="flex items-baseline justify-between mb-5">
               <h2 className="font-display font-bold text-2xl tracking-tight text-bone">The journey</h2>
@@ -184,54 +184,58 @@ export default function RetirePage() {
               </span>
             </div>
 
-            <div className="relative space-y-0">
-              {/* Vertical timeline line */}
-              <div className="absolute left-[27px] top-0 bottom-0 w-px bg-gradient-to-b from-pitch/40 via-line to-line/20" />
+            <div className="flex items-center flex-wrap gap-y-10">
+              {clubs.flatMap((c, i) => {
+                const isFirst = i === 0;
+                const isLast = i === clubs.length - 1;
+                const next = clubs[i + 1];
+                const items = [];
 
-              {clubs.map((c, i) => (
-                <div key={`${c.id}-${i}`} className="relative flex items-start gap-5 pl-[60px] pb-6 anim-rise" style={{ animationDelay: `${100 + i * 90}ms` }}>
-                  {/* Circle on timeline */}
+                items.push(
                   <div
-                    className={`absolute left-3 top-4 size-6 rounded-full border-2 flex items-center justify-center z-10 ${
-                      i === 0
-                        ? "border-pitch bg-pitch-deep"
-                        : i === clubs.length - 1
-                        ? "border-gold bg-gold-deep"
-                        : "border-line bg-ink-3"
-                    }`}
+                    key={`club-${c.id}-${i}`}
+                    className="flex-1 flex flex-col items-center gap-1.5 anim-rise"
+                    style={{ animationDelay: `${80 + i * 70}ms` }}
                   >
-                    <span className={`font-mono text-[9px] font-bold ${
-                      i === 0 ? "text-pitch" : i === clubs.length - 1 ? "text-gold" : "text-bone-3"
-                    }`}>{i + 1}</span>
+                    <ClubLogo name={c.name} url={clubLogoUrl(c.id)} size={64} clubId={c.id} />
+                    {(isFirst || isLast) && (
+                      <span className={`text-[8px] font-mono uppercase tracking-[0.15em] ${
+                        isFirst ? "text-pitch" : "text-gold"
+                      }`}>
+                        {isFirst ? "Start" : "End"}
+                      </span>
+                    )}
                   </div>
+                );
 
-                  {/* Card */}
-                  <div className="flex-1 rounded-2xl border border-line bg-ink-2 p-4 flex items-center gap-4">
-                    <ClubLogo name={c.name} url={clubLogoUrl(c.id)} size={48} className="shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="font-display font-bold text-lg text-bone leading-tight tracking-tight">
-                        {c.name}
+                if (!isLast) {
+                  items.push(
+                    <div
+                      key={`arrow-${i}`}
+                      className="w-14 shrink-0 flex flex-col items-stretch"
+                    >
+                      <span className="text-[9px] font-mono text-gold text-center leading-none mb-1.5 h-3">
+                        {next?.transferFeeEur ? fmtMoney(next.transferFeeEur) : ""}
+                      </span>
+                      <div
+                        className="flex items-center justify-center"
+                        style={{ filter: "drop-shadow(0 0 5px rgba(45,212,191,0.65))" }}
+                      >
+                        <svg width="28" height="18" viewBox="0 0 28 18" fill="none">
+                          <path d="M2 2 L10 9 L2 16" stroke="var(--color-pitch)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M10 2 L18 9 L10 16" stroke="var(--color-pitch)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M18 2 L26 9 L18 16" stroke="var(--color-pitch)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
                       </div>
-                      <div className="text-[11px] text-bone-3 font-mono uppercase tracking-widest">
-                        {c.league}
-                      </div>
+                      <span className="text-[9px] font-mono text-bone-3 text-center leading-none mt-1.5 h-3">
+                        {next?.from}
+                      </span>
                     </div>
-                    <div className="text-right shrink-0">
-                      <div className="num text-bone-2 text-sm font-bold">
-                        {c.from === c.to ? `${c.from}` : `${c.from} – ${c.to}`}
-                      </div>
-                      <div className="text-[11px] text-bone-3 font-mono">
-                        {c.to - c.from + 1}y
-                      </div>
-                      {c.transferFeeEur && (
-                        <div className="text-[10px] text-gold font-mono mt-0.5">
-                          {fmtMoney(c.transferFeeEur)}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
+                  );
+                }
+
+                return items;
+              })}
             </div>
           </section>
 

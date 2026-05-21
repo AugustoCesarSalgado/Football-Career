@@ -110,7 +110,7 @@ export default function SeasonResultPage() {
             <div className="flex items-center gap-4">
               {/* Club pill */}
               <div className="flex items-center gap-3 rounded-2xl border border-line bg-ink-2 px-4 py-3">
-                <ClubLogo name={season.clubName} url={clubLogoUrl(season.clubId)} size={36} />
+                <ClubLogo name={season.clubName} url={clubLogoUrl(season.clubId)} size={36} clubId={season.clubId} />
                 <div>
                   <div className="text-[10px] text-bone-3 font-mono uppercase tracking-widest">
                     {ordinal(season.club.leaguePosition)} in

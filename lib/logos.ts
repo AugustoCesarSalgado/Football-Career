@@ -1,8 +1,18 @@
+import type React from "react";
 import { LEAGUES, clubById } from "./leagues";
 import { COMP_BY_ID } from "./competitions";
 import { COUNTRY_FOLDER, NATIONAL_TEAM_URL, flagIso } from "./countries";
 
 const SVG_CLUB_SLUGS = new Set(["juventus"]);
+
+/** Club IDs whose PNG logo needs a white filter (dark logo on transparent bg) */
+const WHITE_FILTER_CLUBS = new Set(["EN-tottenham"]);
+
+export function clubLogoStyle(clubId: string): React.CSSProperties | undefined {
+  return WHITE_FILTER_CLUBS.has(clubId)
+    ? { filter: "brightness(0) invert(1)" }
+    : undefined;
+}
 
 /** /public/clubs/{country}/{slug}.{png|svg} */
 export function clubLogoUrl(clubId: string): string | null {
