@@ -157,6 +157,21 @@ function renderIcon(t: TrophyKind, size: "small" | "large" = "small") {
         />
       );
     }
+    if (t.name === "UEFA Player of the Season") {
+      const px = lg ? 48 : 32;
+      return (
+        <img
+          src="/tournaments/uefa-player-of-season.png"
+          alt="UEFA Player of the Season"
+          width={px}
+          height={px}
+          className="object-contain drop-shadow-lg"
+          style={lg ? { filter: "drop-shadow(0 0 14px rgba(245,158,11,0.55))" } : undefined}
+        />
+      );
+    }
+    if (t.name === "League MVP")
+      return <LeagueMvpIcon className={lg ? "size-10 text-gold" : "size-6 text-gold"} style={lg ? { filter: "drop-shadow(0 0 14px rgba(245,158,11,0.55))" } : undefined} />;
     return <BallonIcon className={lg ? "size-10 text-gold" : "size-6 text-gold"} />;
   }
   if (t.kind === "league") {
@@ -231,6 +246,17 @@ export function BallonIcon({ className = "", style }: { className?: string; styl
       <circle cx="12" cy="10" r="6" />
       <path d="M9 16l-1 5 4-2 4 2-1-5" />
       <path d="M12 4v12M6 10h12" />
+    </svg>
+  );
+}
+
+export function LeagueMvpIcon({ className = "", style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg viewBox="0 0 24 31" fill="none" className={className} style={style} stroke="currentColor" strokeWidth="1.5">
+      <circle cx="12" cy="10" r="6" />
+      <path d="M9 16l-1 5 4-2 4 2-1-5" />
+      <path d="M12 4v12M6 10h12" />
+      <text x="12" y="30" textAnchor="middle" fontSize="5.5" fontFamily="monospace" fontWeight="bold" fill="currentColor" stroke="none" letterSpacing="1.5">MVP</text>
     </svg>
   );
 }

@@ -85,6 +85,7 @@ export interface ClubResult {
 export type IndividualAward =
   | "Ballon d'Or"
   | "FIFA The Best"
+  | "UEFA Player of the Season"
   | "Golden Boot"
   | "League MVP"
   | "Continental Player of the Year";

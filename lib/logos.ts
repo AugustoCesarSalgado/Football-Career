@@ -89,9 +89,11 @@ export function cupLogoStyle(name: string): React.CSSProperties | undefined {
 
 const COMP_LOGO_EXT: Record<string, string> = {
   "conmebol-recopa": "png",
+  "it-supercopa":    "png",
+  "finalissima":     "png",
 };
 
-const COMP_INVERT = new Set(["conmebol-recopa"]);
+const COMP_INVERT = new Set(["conmebol-recopa", "finalissima"]);
 
 export function competitionLogoStyle(compId: string): React.CSSProperties | undefined {
   return COMP_INVERT.has(compId) ? { filter: "brightness(0) invert(1)" } : undefined;

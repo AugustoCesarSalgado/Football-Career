@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { TrophyKind, labelFor, CupIcon, BallonIcon, FlagIcon, BootIcon } from "./Trophy";
+import { TrophyKind, labelFor, CupIcon, BallonIcon, FlagIcon, BootIcon, LeagueMvpIcon } from "./Trophy";
 import { competitionLogoUrl, competitionLogoStyle, nationalTournamentLogoUrl, tournamentLogoStyle, leagueLogoUrlByName, cupLogoUrlByName, cupLogoStyle, LEAGUE_NO_GLOW } from "@/lib/logos";
 import { NATIONAL_TOURNAMENT_LOGO } from "@/lib/competitions";
 
@@ -386,6 +386,26 @@ function renderShelfIcon(g: GroupedTrophy, size: "small" | "large") {
         />
       );
     }
+    if (g.name === "UEFA Player of the Season") {
+      const px = lg ? 64 : 36;
+      return (
+        <img
+          src="/tournaments/uefa-player-of-season.png"
+          alt="UEFA Player of the Season"
+          width={px}
+          height={px}
+          className="object-contain"
+          style={lg ? { filter: "drop-shadow(0 0 14px rgba(245,158,11,0.55))" } : undefined}
+        />
+      );
+    }
+    if (g.name === "League MVP")
+      return (
+        <LeagueMvpIcon
+          className={lg ? "size-12 text-gold" : "size-7 text-gold"}
+          style={lg ? { filter: "drop-shadow(0 0 14px rgba(245,158,11,0.55))" } : undefined}
+        />
+      );
     return (
       <BallonIcon
         className={lg ? "size-12 text-gold" : "size-7 text-gold"}

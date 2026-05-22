@@ -204,7 +204,9 @@ export function simulateClubResult(
   let continentalCompetition: string | undefined;
   let continentalResult: ClubResult["continentalResult"];
   if (tier <= 2 && continentals[0]) {
-    continentalCompetition = continentals[0].id;
+    // tier 2 drops to UEL/Sudamericana ~25% of the time
+    const dropToSecond = tier === 2 && chance(0.25) && continentals[1];
+    continentalCompetition = dropToSecond ? continentals[1].id : continentals[0].id;
     const roll2 = Math.random();
     if (tier === 1) {
       if (roll2 < 0.18) continentalResult = "champion";
@@ -220,12 +222,25 @@ export function simulateClubResult(
       else continentalResult = "group";
     }
   } else if (tier === 3 && continentals[1]) {
-    continentalCompetition = continentals[1].id;
+    // tier 3: 40% chance of Conference League instead of UEL (UEFA only — CONMEBOL has no third comp)
+    const inConference = continentals[2] && chance(0.4);
+    continentalCompetition = inConference ? continentals[2].id : continentals[1].id;
     const roll2 = Math.random();
     if (roll2 < 0.04) continentalResult = "champion";
     else if (roll2 < 0.12) continentalResult = "semifinal";
     else if (roll2 < 0.35) continentalResult = "quarterfinal";
     else continentalResult = "group";
+  } else if (tier >= 4 && chance(0.4)) {
+    // tier 4: occasional Conference League or second-tier comp
+    const comp = continentals[2] ?? continentals[1];
+    if (comp) {
+      continentalCompetition = comp.id;
+      const roll2 = Math.random();
+      if (roll2 < 0.02) continentalResult = "champion";
+      else if (roll2 < 0.08) continentalResult = "semifinal";
+      else if (roll2 < 0.22) continentalResult = "quarterfinal";
+      else continentalResult = "group";
+    }
   }
 
   // Bonus trophies awarded after winning a continental crown
@@ -252,6 +267,14 @@ export function simulateClubResult(
       prevSeason?.club.continentalCompetition === "conmebol-lib")
   ) {
     bonusTrophies.push("intercontinental");
+  }
+  // Finalissima — awarded the season AFTER winning Copa América or UEFA Euro
+  if (
+    prevSeason?.national.tournament?.result === "champion" &&
+    (prevSeason.national.tournament.name === "Copa América" ||
+      prevSeason.national.tournament.name === "UEFA Euro")
+  ) {
+    bonusTrophies.push("finalissima");
   }
 
   if (continentalResult === "champion" && continentalCompetition) {
@@ -307,6 +330,10 @@ export function simulateClubResult(
   if (player.currentCountry === "ES") {
     // Supercopa de España — follows a league or cup win
     if ((leagueWin || nationalCupWon) && chance(0.5)) bonusTrophies.push("es-supercopa");
+  }
+  if (player.currentCountry === "IT") {
+    // Supercoppa Italiana — follows a league or cup win
+    if ((leagueWin || nationalCupWon) && chance(0.5)) bonusTrophies.push("it-supercopa");
   }
 
   return {
@@ -394,8 +421,13 @@ export function simulateAwards(
     player.currentLeague,
   );
   if (greatSeason && (wonBig || wonWithNT)) {
-    if (inBig5 && chance(0.4)) awards.push("Ballon d'Or");
-    if (chance(0.35)) awards.push("FIFA The Best");
+    if (inBig5 && chance(0.4)) {
+      awards.push("Ballon d'Or");
+      awards.push("FIFA The Best");
+      awards.push("UEFA Player of the Season");
+    } else if (chance(0.35)) {
+      awards.push("FIFA The Best");
+    }
   }
   if (player.position === "FWD" && stats.goals >= 28 && chance(0.45)) {
     awards.push("Golden Boot");

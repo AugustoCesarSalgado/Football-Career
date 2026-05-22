@@ -23,6 +23,8 @@ export const BONUS_COMPETITIONS: ContinentalCompetition[] = [
   { id: "intercontinental", name: "Intercontinental Cup", confederation: "UEFA", prestige: 4, logoSlug: "intercontinental-cup" },
   { id: "en-community-shield", name: "FA Community Shield", confederation: "UEFA", prestige: 2, logoSlug: "en-community-shield" },
   { id: "es-supercopa", name: "Supercopa de España", confederation: "UEFA", prestige: 3, logoSlug: "es-supercopa" },
+  { id: "it-supercopa", name: "Supercoppa Italiana", confederation: "UEFA", prestige: 2, logoSlug: "it-supercopa" },
+  { id: "finalissima", name: "Finalissima", confederation: "UEFA", prestige: 4, logoSlug: "finalissima" },
 ];
 
 export const ALL_COMPETITIONS = [...COMPETITIONS, ...BONUS_COMPETITIONS];

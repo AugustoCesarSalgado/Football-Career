@@ -475,9 +475,11 @@ function LeagueTableModal({
   const total = standings.length;
 
   const isHypermotion = league === "LaLiga Hypermotion";
+  const isConmebol = league === "Liga Profesional" || league === "Brasileirão";
   const promoAuto = isHypermotion ? 2 : 0;
   const promoPlayoff = isHypermotion ? 4 : 0;
-  const relegStart = total - 2;
+  const relegCount = league === "Liga Profesional" ? 3 : league === "Brasileirão" ? 4 : 2;
+  const relegStart = total - relegCount;
 
   const euZones: { ucl: number; uel: [number, number]; uecl: number } = (() => {
     if (league === "Serie A" || league === "Bundesliga")
@@ -492,6 +494,9 @@ function LeagueTableModal({
     if (isHypermotion) {
       if (i < promoAuto) return "promo";
       if (i < promoPlayoff) return "playoff";
+    } else if (isConmebol) {
+      if (pos <= 5) return "uel";
+      if (pos >= 6 && pos <= 11) return "ucl";
     } else {
       if (pos <= euZones.ucl) return "ucl";
       if (pos >= euZones.uel[0] && pos <= euZones.uel[1]) return "uel";
@@ -674,6 +679,11 @@ function LeagueTableModal({
               <>
                 <LegendItem bar="bg-pitch"      logo={null} label="Ascenso directo" />
                 <LegendItem bar="bg-pitch/40"   logo={null} label="Play-off" />
+              </>
+            ) : isConmebol ? (
+              <>
+                <LegendItem bar="bg-orange-500" logo="/tournaments/conmebol-libertadores.svg"  label="Libertadores" />
+                <LegendItem bar="bg-blue-500"   logo="/tournaments/sudamericana.svg"           label="Sudamericana" />
               </>
             ) : (
               <>
