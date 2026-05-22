@@ -7,7 +7,7 @@ import { fmtMoney } from "@/lib/format";
 import type { Offer } from "@/types";
 
 const DURATION_MS = 4600;
-const SHAFT = 112;
+
 
 const STYLES = `
 @keyframes ta-flash {
@@ -35,8 +35,14 @@ const STYLES = `
   from { opacity: 0; }
   to   { opacity: 1; }
 }
-@keyframes ta-stroke {
-  to { stroke-dashoffset: 0; }
+@keyframes ta-chev-in {
+  0%   { opacity: 0; transform: translateX(-18px) scale(0.7); }
+  65%  { opacity: 1; transform: translateX(4px) scale(1.05); }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes ta-chev-flow {
+  0%, 100% { opacity: 1; }
+  40%       { opacity: 0.15; }
 }
 @keyframes ta-pop {
   0%   { opacity: 0; transform: scale(0.3); }
@@ -183,38 +189,40 @@ export function TransferAnimation({
           </div>
         </div>
 
-        {/* ── GREEN ARROW ── */}
+        {/* ── CHEVRON ARROWS ── */}
         <div className="flex flex-col items-center gap-3">
-          <svg
-            width="170"
-            height="50"
-            viewBox="0 0 170 50"
-            className="overflow-visible"
-            style={{ filter: "drop-shadow(0 0 10px rgba(45,212,191,0.8))" }}
-          >
-            <line
-              x1="8" y1="25"
-              x2={8 + SHAFT} y2="25"
-              stroke="var(--color-pitch)"
-              strokeWidth="5"
-              strokeLinecap="round"
-              style={{
-                strokeDasharray: SHAFT,
-                strokeDashoffset: SHAFT,
-                animation: "ta-stroke 0.52s ease-out 1.05s forwards",
-              }}
-            />
-            <polygon
-              points={`${8 + SHAFT - 4},12 162,25 ${8 + SHAFT - 4},38`}
-              fill="var(--color-pitch)"
-              style={{ opacity: 0, animation: "ta-pop 0.38s cubic-bezier(0.34,1.56,0.64,1) 1.52s forwards" }}
-            />
-          </svg>
+          <div className="flex items-center gap-1">
+            {[0, 1, 2].map((i) => (
+              <svg
+                key={i}
+                width="40"
+                height="32"
+                viewBox="0 0 14 20"
+                fill="none"
+                style={{
+                  opacity: 0,
+                  filter: "drop-shadow(0 0 7px rgba(45,212,191,0.85))",
+                  animation: [
+                    `ta-chev-in 0.42s cubic-bezier(0.22,1,0.36,1) ${1.0 + i * 0.16}s forwards`,
+                    `ta-chev-flow 1.1s ease-in-out ${1.7 + i * 0.37}s infinite`,
+                  ].join(", "),
+                }}
+              >
+                <path
+                  d="M 2 2 L 11 10 L 2 18"
+                  stroke="var(--color-pitch)"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            ))}
+          </div>
 
           {to.transferFeeEur ? (
             <div
               className="rounded-full border-2 border-gold/50 bg-gold/10 px-5 py-1.5"
-              style={{ opacity: 0, animation: "ta-pop 0.45s cubic-bezier(0.34,1.56,0.64,1) 1.82s forwards" }}
+              style={{ opacity: 0, animation: "ta-pop 0.45s cubic-bezier(0.34,1.56,0.64,1) 1.6s forwards" }}
             >
               <span className="text-sm text-gold font-mono font-bold tracking-wide">
                 {fmtMoney(to.transferFeeEur)}
@@ -223,7 +231,7 @@ export function TransferAnimation({
           ) : (
             <div
               className="rounded-full border border-pitch/45 bg-pitch/10 px-5 py-1.5"
-              style={{ opacity: 0, animation: "ta-pop 0.45s cubic-bezier(0.34,1.56,0.64,1) 1.82s forwards" }}
+              style={{ opacity: 0, animation: "ta-pop 0.45s cubic-bezier(0.34,1.56,0.64,1) 1.6s forwards" }}
             >
               <span className="text-sm text-pitch font-mono font-bold tracking-wide">Free transfer</span>
             </div>

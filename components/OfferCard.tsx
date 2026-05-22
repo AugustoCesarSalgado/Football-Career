@@ -2,7 +2,7 @@
 
 import type { Offer } from "@/types";
 import { ClubLogo, Flag } from "./Logo";
-import { clubLogoUrl } from "@/lib/logos";
+import { clubLogoUrl, leagueLogoUrlByName } from "@/lib/logos";
 import { fmtMoney } from "@/lib/format";
 
 export function OfferCard({
@@ -73,7 +73,16 @@ export function OfferCard({
             </h3>
             <div className="flex items-center gap-2 mt-1 text-bone-3 text-[11px] font-mono">
               <Flag code={offer.clubCountry} width={16} height={11} className="rounded-sm" />
-              <span>{offer.clubLeague}</span>
+              {leagueLogoUrlByName(offer.clubLeague) && (
+                <img
+                  src={leagueLogoUrlByName(offer.clubLeague)!}
+                  alt={offer.clubLeague}
+                  width={16}
+                  height={16}
+                  className="object-contain shrink-0"
+                />
+              )}
+              <span className="text-bone">{offer.clubLeague}</span>
             </div>
           </div>
         </div>

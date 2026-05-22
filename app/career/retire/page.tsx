@@ -9,7 +9,7 @@ import { type TrophyKind } from "@/components/Trophy";
 import { TrophyShelf } from "@/components/TrophyShelf";
 import { BigStat } from "@/components/Stat";
 import { clubLogoUrl } from "@/lib/logos";
-import { COMP_BY_ID, NATIONAL_CUPS } from "@/lib/competitions";
+import { COMP_BY_ID, NATIONAL_CUPS, SECONDARY_NATIONAL_CUPS } from "@/lib/competitions";
 import { fmtMoney } from "@/lib/format";
 
 export default function RetirePage() {
@@ -82,6 +82,10 @@ export default function RetirePage() {
       if (s.club.leagueWin) trophies.push({ kind: "league", name: s.league, year });
       if (s.club.nationalCupWon)
         trophies.push({ kind: "cup", name: NATIONAL_CUPS[s.clubCountry]?.name ?? "Domestic Cup", year });
+      if (s.club.leagueCupWon) {
+        const sec = SECONDARY_NATIONAL_CUPS[s.clubCountry];
+        if (sec) trophies.push({ kind: "cup", name: sec.name, year });
+      }
       if (s.club.continentalResult === "champion" && s.club.continentalCompetition) {
         const comp = COMP_BY_ID[s.club.continentalCompetition];
         if (comp) trophies.push({ kind: "continental", compId: comp.id, name: comp.name, year });

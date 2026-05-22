@@ -1,4 +1,4 @@
-import { competitionLogoUrl } from "@/lib/logos";
+import { competitionLogoUrl, competitionLogoStyle, nationalTournamentLogoUrl, tournamentLogoStyle, leagueLogoUrlByName, cupLogoUrlByName, cupLogoStyle, LEAGUE_NO_GLOW } from "@/lib/logos";
 import { NATIONAL_TOURNAMENT_LOGO } from "@/lib/competitions";
 
 export type TrophyKind =
@@ -83,16 +83,37 @@ function renderIcon(t: TrophyKind, size: "small" | "large" = "small") {
   if (t.kind === "continental" || t.kind === "bonus") {
     const src = competitionLogoUrl(t.compId);
     const px = t.compId === "conmebol-lib" ? (lg ? 64 : 44) : (lg ? 48 : 32);
-    if (src)
-      return <img src={src} alt={t.name} width={px} height={px} className="object-contain drop-shadow-lg" />;
+    if (src) {
+      const invertStyle = competitionLogoStyle(t.compId);
+      return (
+        <img
+          src={src}
+          alt={t.name}
+          width={px}
+          height={px}
+          className="object-contain drop-shadow-lg"
+          style={invertStyle}
+        />
+      );
+    }
     return <CupIcon className={lg ? "size-10 text-gold" : "size-6 text-gold"} />;
   }
   if (t.kind === "national") {
     const slug = NATIONAL_TOURNAMENT_LOGO[t.name];
-    const px = lg ? 48 : 32;
+    const isWC = t.name === "FIFA World Cup";
+    const isCA = t.name === "Copa América";
+    const wcW = lg ? 30 : 18;
+    const px = isWC ? wcW : (lg ? 48 : 32);
     if (slug)
       return (
-        <img src={`/tournaments/${slug}.svg`} alt={t.name} width={px} height={px} className="object-contain drop-shadow-lg" />
+        <img
+          src={nationalTournamentLogoUrl(slug)}
+          alt={t.name}
+          width={px}
+          height={isWC ? Math.round(px * (350.67 / 227.29)) : px}
+          className="object-contain drop-shadow-lg"
+          style={(isWC || isCA) && lg ? { filter: "drop-shadow(0 0 14px rgba(245,158,11,0.55))" } : tournamentLogoStyle(slug)}
+        />
       );
     return <FlagIcon className={lg ? "size-10 text-gold" : "size-6 text-gold"} />;
   }
@@ -138,8 +159,44 @@ function renderIcon(t: TrophyKind, size: "small" | "large" = "small") {
     }
     return <BallonIcon className={lg ? "size-10 text-gold" : "size-6 text-gold"} />;
   }
-  if (t.kind === "league")
+  if (t.kind === "league") {
+    const url = leagueLogoUrlByName(t.name);
+    const px = lg ? 48 : 32;
+    if (url)
+      return (
+        <img
+          src={url}
+          alt={t.name}
+          width={px}
+          height={px}
+          className="object-contain"
+          style={lg && !LEAGUE_NO_GLOW.has(t.name) ? { filter: "drop-shadow(0 0 8px rgba(45,212,191,0.3))" } : undefined}
+        />
+      );
     return <CupIcon className={lg ? "size-10 text-pitch" : "size-6 text-pitch"} />;
+  }
+  if (t.kind === "cup") {
+    const url = cupLogoUrlByName(t.name);
+    const px = lg ? 48 : 32;
+    if (url) {
+      const baseFilter = lg ? "drop-shadow(0 0 8px rgba(45,212,191,0.3))" : undefined;
+      const invert = cupLogoStyle(t.name);
+      const combinedFilter = invert
+        ? `brightness(0) invert(1)${baseFilter ? ` ${baseFilter}` : ""}`
+        : baseFilter;
+      return (
+        <img
+          src={url}
+          alt={t.name}
+          width={px}
+          height={px}
+          className="object-contain"
+          style={combinedFilter ? { filter: combinedFilter } : undefined}
+        />
+      );
+    }
+    return <CupIcon className={lg ? "size-10 text-gold" : "size-6 text-gold"} />;
+  }
   return <CupIcon className={lg ? "size-10 text-gold" : "size-6 text-gold"} />;
 }
 

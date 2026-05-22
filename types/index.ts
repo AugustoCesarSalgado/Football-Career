@@ -67,6 +67,7 @@ export interface ClubResult {
   leagueWin: boolean;
   qualifiedToContinental?: string; // continental id
   nationalCupWon: boolean;
+  leagueCupWon?: boolean; // secondary domestic cup (e.g. EFL Cup for England)
   continentalCompetition?: string;
   continentalResult?:
     | "champion"
@@ -77,6 +78,8 @@ export interface ClubResult {
   /** Ids of bonus trophies awarded on top of the continental crown
    * (UEFA Super Cup, FIFA Club World Cup, Intercontinental Cup). */
   bonusTrophies?: string[];
+  relegated?: boolean;
+  promoted?: boolean;
 }
 
 export type IndividualAward =
@@ -85,6 +88,18 @@ export type IndividualAward =
   | "Golden Boot"
   | "League MVP"
   | "Continental Player of the Year";
+
+export interface StandingRow {
+  clubId: string;
+  clubName: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  gf: number;
+  ga: number;
+  points: number;
+}
 
 export interface Season {
   index: number;
@@ -100,6 +115,7 @@ export interface Season {
   salaryEur: number; // yearly
   transferFeeEur?: number; // paid this year (when joined)
   ageAtSeasonStart: number;
+  standings?: StandingRow[];
 }
 
 export interface Offer {

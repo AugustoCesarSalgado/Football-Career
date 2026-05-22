@@ -10,10 +10,10 @@ import { ClubLogo, Flag } from "@/components/Logo";
 import { ResumeBanner } from "@/components/ResumeBanner";
 import { Hero } from "@/components/Hero";
 import { randomName } from "@/lib/names";
-import { LEAGUES, allClubs } from "@/lib/leagues";
+import { LEAGUES, allClubs, clubById } from "@/lib/leagues";
 import { ALL_COMPETITIONS, NATIONAL_TOURNAMENTS } from "@/lib/competitions";
 import { squadNumber, POSITION_LABEL } from "@/lib/squadNumbers";
-import { clubLogoUrl } from "@/lib/logos";
+import { clubLogoUrl, leagueLogoUrl, leagueLogoUrlByName } from "@/lib/logos";
 import { pick } from "@/lib/random";
 import { useCareer } from "@/lib/store";
 import { COUNTRY_BY_CODE } from "@/lib/countries";
@@ -46,9 +46,14 @@ export default function LandingPage() {
 
   const ready = countryCode && position && name && clubId && number;
   const club = useMemo(() => {
-    if (!clubId || !countryCode) return null;
-    return LEAGUES[countryCode]?.clubs.find((c) => c.id === clubId) ?? null;
-  }, [clubId, countryCode]);
+    if (!clubId) return null;
+    return clubById(clubId) ?? null;
+  }, [clubId]);
+
+  const clubLeague = useMemo(() => {
+    if (!clubId) return null;
+    return Object.values(LEAGUES).find((l) => l.clubs.some((c) => c.id === clubId)) ?? null;
+  }, [clubId]);
 
   const country = countryCode ? COUNTRY_BY_CODE[countryCode] : null;
 
@@ -149,9 +154,19 @@ export default function LandingPage() {
                         <span className="text-bone-3">unknown</span>
                       )}
                     </div>
-                    <div className="text-sm text-bone-2 mt-1">
-                      {position ? POSITION_LABEL[position] : "no role"} ·{" "}
-                      {country?.league ?? "—"}
+                    <div className="flex items-center gap-1.5 text-sm text-bone-2 mt-1">
+                      {position ? POSITION_LABEL[position] : "no role"}
+                      <span className="opacity-40">·</span>
+                      {(clubLeague ? leagueLogoUrlByName(clubLeague.name) : leagueLogoUrl(countryCode ?? "")) && (
+                        <img
+                          src={(clubLeague ? leagueLogoUrlByName(clubLeague.name) : leagueLogoUrl(countryCode ?? ""))!}
+                          alt={clubLeague?.name ?? country?.league ?? ""}
+                          width={18}
+                          height={18}
+                          className="object-contain shrink-0"
+                        />
+                      )}
+                      {clubLeague?.name ?? country?.league ?? "—"}
                     </div>
                   </div>
 
@@ -336,12 +351,15 @@ function ClubModal({
   const ease = "cubic-bezier(0.22,1,0.36,1)";
   const dur = `${CM_DUR}ms`;
 
-  const clubs = LEAGUES[countryCode]?.clubs ?? [];
-  const byTier = clubs.reduce<Record<number, typeof clubs>>((acc, c) => {
-    (acc[c.tier] ??= []).push(c);
-    return acc;
-  }, {});
-  const tiers = Object.keys(byTier).map(Number).sort();
+  // All leagues for this country, primary first
+  const countryLeagues = Object.values(LEAGUES)
+    .filter((l) => l.countryCode === countryCode)
+    .sort((a, b) => {
+      // Primary league (id === countryCode) first
+      if (a.id === countryCode) return -1;
+      if (b.id === countryCode) return 1;
+      return 0;
+    });
 
   return (
     <div
@@ -380,36 +398,60 @@ function ClubModal({
         </div>
 
         {/* Scrollable list */}
-        <div className="overflow-y-auto p-5 space-y-5">
-          {tiers.map((tier) => (
-            <div key={tier}>
-              <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-bone-3 mb-2.5 flex items-center gap-2">
-                <span className="flex-1 h-px bg-line/60" />
-                {TIER_LABEL[tier] ?? `Tier ${tier}`}
-                <span className="flex-1 h-px bg-line/60" />
+        <div className="overflow-y-auto p-5 space-y-6">
+          {countryLeagues.map((league) => {
+            const byTier = league.clubs.reduce<Record<number, typeof league.clubs>>((acc, c) => {
+              (acc[c.tier] ??= []).push(c);
+              return acc;
+            }, {});
+            const tiers = Object.keys(byTier).map(Number).sort();
+
+            return (
+              <div key={league.id}>
+                {/* League header */}
+                {countryLeagues.length > 1 && (
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-pitch font-bold">
+                      {league.name}
+                    </span>
+                    <span className="flex-1 h-px bg-pitch/25" />
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  {tiers.map((tier) => (
+                    <div key={tier}>
+                      <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-bone-3 mb-2 flex items-center gap-2">
+                        <span className="flex-1 h-px bg-line/60" />
+                        {TIER_LABEL[tier] ?? `Tier ${tier}`}
+                        <span className="flex-1 h-px bg-line/60" />
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {byTier[tier].map((c) => {
+                          const active = c.id === selectedId;
+                          return (
+                            <button
+                              key={c.id}
+                              type="button"
+                              title={c.shortName}
+                              onClick={() => pick(c.id)}
+                              className={`size-14 flex items-center justify-center rounded-xl border transition-all ${
+                                active
+                                  ? "border-pitch bg-pitch/10 shadow-[0_0_12px_rgba(45,212,191,0.35)]"
+                                  : "border-line bg-ink-3 hover:border-bone-3/40 hover:bg-ink-4"
+                              }`}
+                            >
+                              <ClubLogo name={c.name} url={clubLogoUrl(c.id)} size={36} clubId={c.id} />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {byTier[tier].map((c) => {
-                  const active = c.id === selectedId;
-                  return (
-                    <button
-                      key={c.id}
-                      type="button"
-                      title={c.shortName}
-                      onClick={() => pick(c.id)}
-                      className={`size-14 flex items-center justify-center rounded-xl border transition-all ${
-                        active
-                          ? "border-pitch bg-pitch/10 shadow-[0_0_12px_rgba(45,212,191,0.35)]"
-                          : "border-line bg-ink-3 hover:border-bone-3/40 hover:bg-ink-4"
-                      }`}
-                    >
-                      <ClubLogo name={c.name} url={clubLogoUrl(c.id)} size={36} clubId={c.id} />
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

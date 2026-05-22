@@ -86,10 +86,21 @@ export const useCareer = create<CareerStoreState>()(
           career.seasons,
         );
         const updatedSeasons = [...career.seasons, season];
-        const offers = generateOffers(career.player, season);
+
+        // Apply promotion / relegation to the player before generating offers
+        // so the renew offer reflects the new division
+        let playerForOffers = career.player;
+        if (season.club.relegated) {
+          playerForOffers = { ...playerForOffers, currentLeague: "LaLiga Hypermotion" };
+        } else if (season.club.promoted) {
+          playerForOffers = { ...playerForOffers, currentLeague: "LaLiga" };
+        }
+
+        const offers = generateOffers(playerForOffers, season);
         set({
           career: {
             ...career,
+            player: playerForOffers,
             seasons: updatedSeasons,
             pendingOffers: offers,
           },

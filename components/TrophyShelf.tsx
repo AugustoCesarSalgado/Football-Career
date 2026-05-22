@@ -1,5 +1,6 @@
+import { useEffect, useState } from "react";
 import { TrophyKind, labelFor, CupIcon, BallonIcon, FlagIcon, BootIcon } from "./Trophy";
-import { competitionLogoUrl } from "@/lib/logos";
+import { competitionLogoUrl, competitionLogoStyle, nationalTournamentLogoUrl, tournamentLogoStyle, leagueLogoUrlByName, cupLogoUrlByName, cupLogoStyle, LEAGUE_NO_GLOW } from "@/lib/logos";
 import { NATIONAL_TOURNAMENT_LOGO } from "@/lib/competitions";
 
 interface GroupedTrophy {
@@ -98,7 +99,7 @@ export function TrophyShelf({ trophies }: { trophies: TrophyKind[] }) {
       {domestic.length > 0 && (
         <div>
           <SectionDivider label="Domestic" color="pitch" />
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {domestic.map((g, i) => (
               <DomesticCard key={g.key} g={g} index={i} />
             ))}
@@ -109,8 +110,31 @@ export function TrophyShelf({ trophies }: { trophies: TrophyKind[] }) {
   );
 }
 
-/* Prestige card — taller, prominent icon, shimmer */
+function useCountUp(target: number, delay = 0) {
+  const [val, setVal] = useState(0);
+  useEffect(() => {
+    if (target <= 1) { setVal(target); return; }
+    const t = setTimeout(() => {
+      const steps = Math.min(target, 24);
+      const stepMs = Math.min(40, 700 / steps);
+      let i = 0;
+      const id = setInterval(() => {
+        i++;
+        setVal(i >= steps ? target : Math.round((target / steps) * i));
+        if (i >= steps) clearInterval(id);
+      }, stepMs);
+      return () => clearInterval(id);
+    }, delay);
+    return () => clearTimeout(t);
+  }, [target, delay]);
+  return val;
+}
+
+/* Prestige card */
 function PrestigeCard({ g, index }: { g: GroupedTrophy; index: number }) {
+  const count = useCountUp(g.count, 300 + index * 80);
+  const sortedYears = [...g.years].sort((a, b) => a - b);
+
   return (
     <div
       className="relative flex flex-col rounded-2xl border border-gold/35 bg-gradient-to-b from-gold/10 via-ink-2 to-ink-3 overflow-hidden anim-rise"
@@ -126,52 +150,138 @@ function PrestigeCard({ g, index }: { g: GroupedTrophy; index: number }) {
         }}
       />
 
-      {/* Count badge */}
-      {g.count > 1 && (
-        <div className="absolute top-2.5 right-2.5 rounded-full bg-gold text-ink text-[10px] font-bold font-mono px-2 py-0.5 leading-none">
-          ×{g.count}
-        </div>
-      )}
+      {/* Watermark count */}
+      <div
+        className="absolute bottom-0 right-1 font-display font-bold leading-none select-none pointer-events-none"
+        style={{ fontSize: "clamp(72px,14vw,110px)", color: "rgba(245,158,11,0.07)" }}
+        aria-hidden
+      >
+        {g.count}
+      </div>
 
-      {/* Large icon */}
-      <div className="flex items-center justify-center pt-7 pb-4">
-        {renderShelfIcon(g, "large")}
+      {/* Icon + count row */}
+      <div className="flex items-center justify-between px-4 pt-6 pb-3">
+        <div className="flex items-center justify-start">
+          {renderShelfIcon(g, "large")}
+        </div>
+        <div className="flex flex-col items-end gap-0.5">
+          <div
+            className="font-display font-bold leading-none num"
+            style={{
+              fontSize: "clamp(40px,8vw,64px)",
+              color: "var(--color-gold)",
+              textShadow: "0 0 28px rgba(245,158,11,0.55)",
+            }}
+          >
+            {count}
+          </div>
+          <div className="text-[9px] font-mono uppercase tracking-[0.18em] text-gold/60">
+            {g.count === 1 ? "title" : "titles"}
+          </div>
+        </div>
       </div>
 
       {/* Info footer */}
-      <div className="px-3.5 pb-4 mt-auto">
-        <div className="text-[9px] font-mono uppercase tracking-widest text-gold mb-0.5">
-          {kindLabel(g.kind)}
+      <div className="px-4 pb-4 mt-auto space-y-2">
+        <div>
+          <div className="text-[9px] font-mono uppercase tracking-widest text-gold/70 mb-0.5">
+            {kindLabel(g.kind)}
+          </div>
+          <div className="font-display font-bold text-sm text-bone leading-tight tracking-tight">
+            {g.name}
+          </div>
         </div>
-        <div className="font-display font-bold text-sm text-bone leading-tight tracking-tight">
-          {g.name}
+
+        {/* Year chips */}
+        <div className="flex flex-wrap gap-1">
+          {sortedYears.map((y) => (
+            <span
+              key={y}
+              className="num text-[9px] font-mono px-1.5 py-0.5 rounded-md border border-gold/25 bg-gold/8 text-gold/80 leading-none"
+            >
+              {y}
+            </span>
+          ))}
         </div>
-        <div className="text-[10px] font-mono text-bone-3 mt-1 num">{summarizeYears(g.years)}</div>
       </div>
     </div>
   );
 }
 
-/* Domestic card — compact horizontal */
+/* Domestic card */
 function DomesticCard({ g, index }: { g: GroupedTrophy; index: number }) {
+  const count = useCountUp(g.count, 300 + index * 80);
+  const sortedYears = [...g.years].sort((a, b) => a - b);
+
   return (
     <div
-      className="relative flex flex-col items-center text-center rounded-xl border border-pitch/25 bg-pitch/5 p-3 gap-2 overflow-hidden anim-rise"
-      style={{ animationDelay: `${80 + index * 50}ms` }}
+      className="relative flex flex-col rounded-2xl border border-pitch/35 bg-gradient-to-b from-pitch/10 via-ink-2 to-ink-3 overflow-hidden anim-rise"
+      style={{ animationDelay: `${80 + index * 70}ms` }}
     >
-      {g.count > 1 && (
-        <div className="absolute top-1.5 right-1.5 rounded-full bg-pitch/20 text-pitch text-[9px] font-bold font-mono px-1.5 py-px leading-none border border-pitch/30">
-          ×{g.count}
-        </div>
-      )}
+      {/* Shimmer top line */}
+      <div
+        className="absolute top-0 left-0 right-0 h-px"
+        style={{
+          background: "linear-gradient(90deg, transparent, var(--color-pitch), transparent)",
+          animation: "shimmer 3.5s ease-in-out infinite",
+          backgroundSize: "200% 100%",
+        }}
+      />
 
-      <div className="flex items-center justify-center size-10">
-        {renderShelfIcon(g, "small")}
+      {/* Watermark count */}
+      <div
+        className="absolute bottom-0 right-1 font-display font-bold leading-none select-none pointer-events-none"
+        style={{ fontSize: "clamp(72px,14vw,110px)", color: "rgba(45,212,191,0.07)" }}
+        aria-hidden
+      >
+        {g.count}
       </div>
-      <div className="font-display font-semibold text-xs text-bone leading-tight tracking-tight">
-        {g.name}
+
+      {/* Icon + count row */}
+      <div className="flex items-center justify-between px-4 pt-6 pb-3">
+        <div className="flex items-center justify-center">
+          {renderShelfIcon(g, "large")}
+        </div>
+        <div className="flex flex-col items-end gap-0.5">
+          <div
+            className="font-display font-bold leading-none num"
+            style={{
+              fontSize: "clamp(40px,8vw,64px)",
+              color: "var(--color-pitch)",
+              textShadow: "0 0 28px rgba(45,212,191,0.55)",
+            }}
+          >
+            {count}
+          </div>
+          <div className="text-[9px] font-mono uppercase tracking-[0.18em] text-pitch/60">
+            {g.count === 1 ? "title" : "titles"}
+          </div>
+        </div>
       </div>
-      <div className="text-[9px] font-mono text-bone-3 num">{summarizeYears(g.years)}</div>
+
+      {/* Info footer */}
+      <div className="px-4 pb-4 mt-auto space-y-2">
+        <div>
+          <div className="text-[9px] font-mono uppercase tracking-widest text-pitch/70 mb-0.5">
+            {kindLabel(g.kind)}
+          </div>
+          <div className="font-display font-bold text-sm text-bone leading-tight tracking-tight">
+            {g.name}
+          </div>
+        </div>
+
+        {/* Year chips */}
+        <div className="flex flex-wrap gap-1">
+          {sortedYears.map((y) => (
+            <span
+              key={y}
+              className="num text-[9px] font-mono px-1.5 py-0.5 rounded-md border border-pitch/25 bg-pitch/8 text-pitch/80 leading-none"
+            >
+              {y}
+            </span>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -192,7 +302,12 @@ function renderShelfIcon(g: GroupedTrophy, size: "small" | "large") {
   if ((g.kind === "continental" || g.kind === "bonus") && g.compId) {
     const url = competitionLogoUrl(g.compId);
     const px = g.compId === "conmebol-lib" ? (lg ? 88 : 48) : (lg ? 64 : 36);
-    if (url)
+    if (url) {
+      const invertStyle = competitionLogoStyle(g.compId);
+      const glowFilter = lg ? "drop-shadow(0 0 12px rgba(245,158,11,0.4))" : undefined;
+      const combinedFilter = invertStyle
+        ? `brightness(0) invert(1)${glowFilter ? ` ${glowFilter}` : ""}`
+        : glowFilter;
       return (
         <img
           src={url}
@@ -200,25 +315,35 @@ function renderShelfIcon(g: GroupedTrophy, size: "small" | "large") {
           width={px}
           height={px}
           className="object-contain drop-shadow-xl"
-          style={lg ? { filter: "drop-shadow(0 0 12px rgba(245,158,11,0.4))" } : undefined}
+          style={combinedFilter ? { filter: combinedFilter } : undefined}
         />
       );
+    }
     return <CupIcon className={lg ? "size-12 text-gold" : "size-7 text-pitch"} />;
   }
   if (g.kind === "national") {
     const slug = NATIONAL_TOURNAMENT_LOGO[g.name];
-    const px = lg ? 64 : 36;
-    if (slug)
+    const isWC = g.name === "FIFA World Cup";
+    const isCA = g.name === "Copa América";
+    const px = isWC ? (lg ? 62 : 34) : (lg ? 64 : 36);
+    if (slug) {
+      const blendStyle = tournamentLogoStyle(slug);
+      const goldGlow = { filter: "drop-shadow(0 0 14px rgba(245,158,11,0.55))" };
+      const softGlow = { filter: "drop-shadow(0 0 10px rgba(245,158,11,0.35))" };
+      const style = (isWC || isCA) ? (lg ? goldGlow : undefined) : (blendStyle ?? (lg ? softGlow : undefined));
+      const w = px;
+      const h = isWC ? Math.round(px * (350.67 / 227.29)) : px;
       return (
         <img
-          src={`/tournaments/${slug}.svg`}
+          src={nationalTournamentLogoUrl(slug)}
           alt={g.name}
-          width={px}
-          height={px}
+          width={w}
+          height={h}
           className="object-contain"
-          style={lg ? { filter: "drop-shadow(0 0 10px rgba(245,158,11,0.35))" } : undefined}
+          style={style}
         />
       );
+    }
     return <FlagIcon className={lg ? "size-12 text-gold" : "size-7 text-gold"} />;
   }
   if (g.kind === "award") {
@@ -268,8 +393,44 @@ function renderShelfIcon(g: GroupedTrophy, size: "small" | "large") {
       />
     );
   }
-  if (g.kind === "league")
+  if (g.kind === "league") {
+    const url = leagueLogoUrlByName(g.name);
+    const px = lg ? 64 : 36;
+    if (url)
+      return (
+        <img
+          src={url}
+          alt={g.name}
+          width={px}
+          height={px}
+          className="object-contain"
+          style={lg && !LEAGUE_NO_GLOW.has(g.name) ? { filter: "drop-shadow(0 0 8px rgba(45,212,191,0.3))" } : undefined}
+        />
+      );
     return <CupIcon className={lg ? "size-12 text-pitch" : "size-7 text-pitch"} />;
+  }
+  if (g.kind === "cup") {
+    const url = cupLogoUrlByName(g.name);
+    const px = lg ? 64 : 36;
+    if (url) {
+      const baseFilter = lg ? "drop-shadow(0 0 8px rgba(45,212,191,0.3))" : undefined;
+      const invert = cupLogoStyle(g.name);
+      const combinedFilter = invert
+        ? `brightness(0) invert(1)${baseFilter ? ` ${baseFilter}` : ""}`
+        : baseFilter;
+      return (
+        <img
+          src={url}
+          alt={g.name}
+          width={px}
+          height={px}
+          className="object-contain"
+          style={combinedFilter ? { filter: combinedFilter } : undefined}
+        />
+      );
+    }
+    return <CupIcon className={lg ? "size-12 text-gold" : "size-7 text-gold"} />;
+  }
   return <CupIcon className={lg ? "size-12 text-gold" : "size-7 text-gold"} />;
 }
 

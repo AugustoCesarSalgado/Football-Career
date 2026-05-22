@@ -5,8 +5,9 @@ import type {
   Player,
   Season,
   SeasonStats,
+  StandingRow,
 } from "@/types";
-import { LEAGUES, clubById } from "./leagues";
+import { LEAGUES, clubById, leagueByName } from "./leagues";
 import { COUNTRY_BY_CODE } from "./countries";
 import {
   tournamentForYear,
@@ -230,26 +231,31 @@ export function simulateClubResult(
   // Bonus trophies awarded after winning a continental crown
   const bonusTrophies: string[] = [];
   const isCwcYear = isFifaClubWorldCupYear(year);
+
+  // Awarded the season AFTER winning the corresponding continental crown
+  const prevSeason = priorSeasons[priorSeasons.length - 1];
+  if (
+    prevSeason?.club.continentalResult === "champion" &&
+    prevSeason?.club.continentalCompetition === "uefa-cl"
+  ) {
+    bonusTrophies.push("uefa-supercup");
+  }
+  if (
+    prevSeason?.club.continentalResult === "champion" &&
+    prevSeason?.club.continentalCompetition === "conmebol-lib"
+  ) {
+    bonusTrophies.push("conmebol-recopa");
+  }
+  if (
+    prevSeason?.club.continentalResult === "champion" &&
+    (prevSeason?.club.continentalCompetition === "uefa-cl" ||
+      prevSeason?.club.continentalCompetition === "conmebol-lib")
+  ) {
+    bonusTrophies.push("intercontinental");
+  }
+
   if (continentalResult === "champion" && continentalCompetition) {
     const wins = continentalWinsSet(priorSeasons, continentalCompetition, continentalResult);
-
-    // UEFA Super Cup — only after winning BOTH UCL and UEL (at any point in career)
-    if (
-      (continentalCompetition === "uefa-cl" || continentalCompetition === "uefa-el") &&
-      wins.has("uefa-cl") && wins.has("uefa-el") &&
-      chance(0.6)
-    ) {
-      bonusTrophies.push("uefa-supercup");
-    }
-
-    // Recopa Sudamericana — only after winning BOTH Libertadores and Sudamericana
-    if (
-      (continentalCompetition === "conmebol-lib" || continentalCompetition === "conmebol-sud") &&
-      wins.has("conmebol-lib") && wins.has("conmebol-sud") &&
-      chance(0.6)
-    ) {
-      bonusTrophies.push("conmebol-recopa");
-    }
 
     const isTopCont =
       continentalCompetition === "uefa-cl" ||
@@ -264,14 +270,43 @@ export function simulateClubResult(
       if (chance(cwcChance)) bonusTrophies.push("fifa-cwc");
     }
 
-    // Intercontinental Cup — only once the player has lifted the MAX competition
-    // of all four playable confederations (UCL + Libertadores + AFC CL + Concacaf CC)
-    const hasAllConfedCrowns =
-      wins.has("uefa-cl") && wins.has("conmebol-lib") &&
-      wins.has("afc-cl") && wins.has("concacaf-cc");
-    if (isTopCont && hasAllConfedCrowns && chance(0.5)) {
-      bonusTrophies.push("intercontinental");
+  }
+
+  // Promotion / relegation — Spain only for now
+  let relegated = false;
+  let promoted = false;
+  if (player.currentCountry === "ES") {
+    if (player.currentLeague === "LaLiga") {
+      // Bottom clubs fight relegation
+      if (leaguePosition >= 18 && chance(0.72)) relegated = true;
+      else if (leaguePosition >= 15 && tier >= 4 && chance(0.38)) relegated = true;
+      else if (leaguePosition >= 17 && tier >= 3 && chance(0.45)) relegated = true;
+    } else if (player.currentLeague === "LaLiga Hypermotion") {
+      // Top clubs earn promotion
+      if (leaguePosition <= 2 && chance(0.70)) promoted = true;
+      else if (leaguePosition <= 4 && tier <= 3 && chance(0.30)) promoted = true;
     }
+  }
+
+  // No continental football in the second division
+  if (player.currentLeague === "LaLiga Hypermotion") {
+    qualifiedToContinental = undefined;
+    continentalCompetition = undefined;
+    continentalResult = undefined;
+  }
+
+  // Domestic bonus cups — country-specific
+  let leagueCupWon: boolean | undefined;
+  if (player.currentCountry === "EN") {
+    // EFL Cup — open to all English clubs each season
+    const eflChance = tier === 1 ? 0.14 : tier === 2 ? 0.07 : 0.03;
+    leagueCupWon = chance(eflChance) || undefined;
+    // Community Shield — follows a league, FA Cup, or EFL Cup win
+    if ((leagueWin || nationalCupWon || leagueCupWon) && chance(0.55)) bonusTrophies.push("en-community-shield");
+  }
+  if (player.currentCountry === "ES") {
+    // Supercopa de España — follows a league or cup win
+    if ((leagueWin || nationalCupWon) && chance(0.5)) bonusTrophies.push("es-supercopa");
   }
 
   return {
@@ -279,9 +314,12 @@ export function simulateClubResult(
     leagueWin,
     qualifiedToContinental,
     nationalCupWon,
+    leagueCupWon,
     continentalCompetition,
     continentalResult,
     bonusTrophies: bonusTrophies.length > 0 ? bonusTrophies : undefined,
+    relegated: relegated || undefined,
+    promoted: promoted || undefined,
   };
 }
 
@@ -352,8 +390,11 @@ export function simulateAwards(
   const wonBig = club.leagueWin || club.continentalResult === "champion";
   const wonWithNT = national.tournament?.result === "champion";
 
+  const inBig5 = ["Premier League", "LaLiga", "Serie A", "Ligue 1", "Bundesliga"].includes(
+    player.currentLeague,
+  );
   if (greatSeason && (wonBig || wonWithNT)) {
-    if (chance(0.4)) awards.push("Ballon d'Or");
+    if (inBig5 && chance(0.4)) awards.push("Ballon d'Or");
     if (chance(0.35)) awards.push("FIFA The Best");
   }
   if (player.position === "FWD" && stats.goals >= 28 && chance(0.45)) {
@@ -370,6 +411,68 @@ export function simulateAwards(
   return Array.from(new Set(awards));
 }
 
+function buildStandingRow(
+  clubId: string,
+  clubName: string,
+  pts: number,
+  n: number,
+): StandingRow {
+  const mod = pts % 3;
+  const maxExtraSets = Math.floor((Math.min(pts, n) - mod) / 3);
+  const d = mod + Math.min(rndInt(0, 3), maxExtraSets) * 3;
+  const w = (pts - d) / 3;
+  const l = Math.max(0, n - w - d);
+  const str = clamp(pts / (n * 3), 0, 1);
+  const gf = clamp(Math.round(n * (0.7 + str * 1.1) + rndInt(-6, 6)), 10, 120);
+  const ga = clamp(Math.round(n * (1.8 - str * 1.1) + rndInt(-6, 6)), 10, 120);
+  return { clubId, clubName, played: w + d + l, won: w, drawn: d, lost: l, gf, ga, points: pts };
+}
+
+export function simulateLeagueTable(
+  player: Player,
+  leaguePosition: number,
+): StandingRow[] {
+  const league = leagueByName(player.currentLeague);
+  if (!league || league.clubs.length < 2) return [];
+
+  const clubs = league.clubs;
+  const n = (clubs.length - 1) * 2; // home + away round
+
+  const BASE: Record<number, number> = { 1: 78, 2: 62, 3: 48, 4: 34 };
+
+  // Generate points for every club except the player's
+  const others = clubs
+    .filter((c) => c.id !== player.currentClubId)
+    .map((c) => ({
+      id: c.id,
+      name: c.name,
+      pts: clamp((BASE[c.tier] ?? 38) + rndInt(-13, 13), 6, n * 3 - 1),
+    }))
+    .sort((a, b) => b.pts - a.pts);
+
+  // Determine points for the player's club so they land at leaguePosition
+  const targetIdx = clamp(leaguePosition - 1, 0, others.length);
+  let playerPts: number;
+  if (targetIdx === 0) {
+    playerPts = (others[0]?.pts ?? 60) + rndInt(2, 9);
+  } else if (targetIdx >= others.length) {
+    playerPts = Math.max((others[others.length - 1]?.pts ?? 20) - rndInt(2, 8), 4);
+  } else {
+    const above = others[targetIdx - 1].pts;
+    const below = others[targetIdx].pts;
+    playerPts = below + Math.max(1, Math.floor((above - below + 1) / 2));
+  }
+  playerPts = clamp(playerPts, 4, n * 3 - 1);
+
+  others.splice(targetIdx, 0, {
+    id: player.currentClubId,
+    name: player.currentClubName,
+    pts: playerPts,
+  });
+
+  return others.map((e) => buildStandingRow(e.id, e.name, e.pts, n));
+}
+
 export function simulateSeason(
   player: Player,
   age: number,
@@ -381,8 +484,8 @@ export function simulateSeason(
   const club = simulateClubResult(player, year, priorSeasons);
   const national = simulateNationalTeam(player, age, year, stats.rating);
   const awards = simulateAwards(player, stats, club, national);
+  const standings = simulateLeagueTable(player, club.leaguePosition);
 
-  const clubObj = clubById(player.currentClubId);
   return {
     index: seasonIndex,
     age,
@@ -396,5 +499,6 @@ export function simulateSeason(
     national,
     awards,
     salaryEur: player.salaryEur,
+    standings: standings.length > 0 ? standings : undefined,
   };
 }

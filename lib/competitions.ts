@@ -18,9 +18,11 @@ export const COMPETITIONS: ContinentalCompetition[] = [
 /** Bonus club trophies awarded as a follow-up to a continental crown */
 export const BONUS_COMPETITIONS: ContinentalCompetition[] = [
   { id: "uefa-supercup", name: "UEFA Super Cup", confederation: "UEFA", prestige: 3, logoSlug: "uefa-super-cup" },
-  { id: "conmebol-recopa", name: "Recopa Sudamericana", confederation: "CONMEBOL", prestige: 3 },
+  { id: "conmebol-recopa", name: "Recopa Sudamericana", confederation: "CONMEBOL", prestige: 3, logoSlug: "conmebol-recopa" },
   { id: "fifa-cwc", name: "FIFA Club World Cup", confederation: "UEFA", prestige: 5, logoSlug: "fifa-club-world-cup" },
   { id: "intercontinental", name: "Intercontinental Cup", confederation: "UEFA", prestige: 4, logoSlug: "intercontinental-cup" },
+  { id: "en-community-shield", name: "FA Community Shield", confederation: "UEFA", prestige: 2, logoSlug: "en-community-shield" },
+  { id: "es-supercopa", name: "Supercopa de España", confederation: "UEFA", prestige: 3, logoSlug: "es-supercopa" },
 ];
 
 export const ALL_COMPETITIONS = [...COMPETITIONS, ...BONUS_COMPETITIONS];
@@ -42,6 +44,11 @@ export interface NationalCup {
   name: string;
   countryCode: string;
 }
+
+/** Secondary domestic cup per country (in addition to the main cup) */
+export const SECONDARY_NATIONAL_CUPS: Record<string, NationalCup> = {
+  EN: { name: "EFL Cup", countryCode: "EN" },
+};
 
 export const NATIONAL_CUPS: Record<string, NationalCup> = {
   AR: { name: "Copa Argentina", countryCode: "AR" },
